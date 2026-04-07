@@ -21,11 +21,14 @@ app.get('/admin.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// 初始化数据库
-connectDB().catch(err => {
-    console.error('数据库初始化失败:', err);
-    process.exit(1);
-});
+// 初始化数据库（异步，不阻塞服务启动）
+connectDB()
+    .then(() => console.log('🎉 服务已启动，MongoDB 连接成功'))
+    .catch(err => {
+        console.error('⚠️  MongoDB 连接失败，但服务仍在运行');
+        console.error('错误:', err.message);
+        // 不退出进程，让服务继续运行
+    });
 
 // API 路由
 
