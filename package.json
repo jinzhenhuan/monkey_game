@@ -5,14 +5,20 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "build": "echo 'No build step required'"
   },
   "dependencies": {
+    "cors": "^2.8.5",
     "express": "^4.18.2",
-    "mongodb": "^6.3.0",
-    "cors": "^2.8.5"
+    "sqlite3": "^5.1.6"
   },
-  "keywords": ["game", "query", "legend", "mir"],
+  "keywords": [
+    "game",
+    "query",
+    "legend",
+    "mir"
+  ],
   "author": "Your Name",
   "license": "MIT"
 }

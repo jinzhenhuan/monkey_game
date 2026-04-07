@@ -21,13 +21,13 @@ app.get('/admin.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'public', 'admin.html'));
 });
 
-// 初始化数据库（异步，不阻塞服务启动）
+// 初始化数据库
 connectDB()
-    .then(() => console.log('🎉 服务已启动，MongoDB 连接成功'))
+    .then(() => console.log('🎉 服务已启动，SQLite 数据库连接成功'))
     .catch(err => {
-        console.error('⚠️  MongoDB 连接失败，但服务仍在运行');
+        console.error('⚠️  数据库连接失败');
         console.error('错误:', err.message);
-        // 不退出进程，让服务继续运行
+        process.exit(1);
     });
 
 // API 路由
@@ -40,17 +40,23 @@ app.get('/api/items', async (req, res) => {
     try {
         const db = getDB();
         const { search, type } = req.query;
-        let query = {};
+        let query = 'SELECT * FROM items WHERE 1=1';
+        const params = [];
         
         if (search) {
-            query.name = { $regex: search, $options: 'i' };
+            query += ' AND name LIKE ?';
+            params.push(`%${search}%`);
         }
         if (type) {
-            query.type = type;
+            query += ' AND type = ?';
+            params.push(type);
         }
+        query += ' ORDER BY id DESC';
         
-        const items = await db.collection('items').find(query).sort({ _id: -1 }).toArray();
-        res.json({ data: items, count: items.length });
+        db.all(query, params, (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ data: rows, count: rows.length });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -59,48 +65,33 @@ app.get('/api/items', async (req, res) => {
 app.get('/api/items/:id', async (req, res) => {
     try {
         const db = getDB();
-        const { ObjectId } = require('mongodb');
         const { id } = req.params;
         
-        const item = await db.collection('items').findOne({ _id: new ObjectId(id) });
-        if (!item) return res.status(404).json({ error: '物品不存在' });
-        
-        const sources = await db.collection('item_sources')
-            .aggregate([
-                { $match: { item_id: id } },
-                {
-                    $lookup: {
-                        from: 'monsters',
-                        localField: 'monster_id',
-                        foreignField: '_id',
-                        as: 'monster'
-                    }
-                },
-                {
-                    $lookup: {
-                        from: 'maps',
-                        localField: 'map_id',
-                        foreignField: '_id',
-                        as: 'map'
-                    }
-                },
-                { $unwind: { path: '$monster', preserveNullAndEmptyArrays: true } },
-                { $unwind: { path: '$map', preserveNullAndEmptyArrays: true } },
-                {
-                    $project: {
-                        _id: 1,
-                        item_id: 1,
-                        monster_id: 1,
-                        map_id: 1,
-                        drop_rate: 1,
-                        notes: 1,
-                        monster_name: '$monster.name',
-                        map_name: '$map.name'
-                    }
-                }
-            ]).toArray();
-        
-        res.json({ ...item, sources });
+        db.get('SELECT * FROM items WHERE id = ?', [id], (err, item) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (!item) return res.status(404).json({ error: '物品不存在' });
+            
+            const sql = `
+                SELECT 
+                    s.id,
+                    s.item_id,
+                    s.monster_id,
+                    s.map_id,
+                    s.drop_rate,
+                    s.notes,
+                    m.name as monster_name,
+                    mp.name as map_name
+                FROM item_sources s
+                LEFT JOIN monsters m ON s.monster_id = m.id
+                LEFT JOIN maps mp ON s.map_id = mp.id
+                WHERE s.item_id = ?
+            `;
+            
+            db.all(sql, [id], (err, sources) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ ...item, sources });
+            });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -113,15 +104,12 @@ app.post('/api/items', async (req, res) => {
         
         if (!name) return res.status(400).json({ error: '物品名称必填' });
         
-        const result = await db.collection('items').insertOne({
-            name,
-            type: type || '',
-            description: description || '',
-            level_requirement: level_requirement || 0,
-            created_at: new Date()
-        });
+        const sql = `INSERT INTO items (name, type, description, level_requirement) VALUES (?, ?, ?, ?)`;
         
-        res.json({ id: result.insertedId, message: '创建成功' });
+        db.run(sql, [name, type || '', description || '', level_requirement || 0], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id: this.lastID, message: '创建成功' });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -130,16 +118,15 @@ app.post('/api/items', async (req, res) => {
 app.put('/api/items/:id', async (req, res) => {
     try {
         const db = getDB();
-        const { ObjectId } = require('mongodb');
         const { id } = req.params;
         const { name, type, description, level_requirement } = req.body;
         
-        const result = await db.collection('items').updateOne(
-            { _id: new ObjectId(id) },
-            { $set: { name, type, description, level_requirement } }
-        );
+        const sql = `UPDATE items SET name = ?, type = ?, description = ?, level_requirement = ? WHERE id = ?`;
         
-        res.json({ changes: result.modifiedCount, message: '更新成功' });
+        db.run(sql, [name, type, description, level_requirement, id], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ changes: this.changes, message: '更新成功' });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -148,11 +135,12 @@ app.put('/api/items/:id', async (req, res) => {
 app.delete('/api/items/:id', async (req, res) => {
     try {
         const db = getDB();
-        const { ObjectId } = require('mongodb');
         const { id } = req.params;
         
-        await db.collection('items').deleteOne({ _id: new ObjectId(id) });
-        res.json({ message: '删除成功' });
+        db.run('DELETE FROM items WHERE id = ?', [id], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: '删除成功' });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -162,14 +150,19 @@ app.get('/api/monsters', async (req, res) => {
     try {
         const db = getDB();
         const { search } = req.query;
-        let query = {};
+        let query = 'SELECT * FROM monsters WHERE 1=1';
+        const params = [];
         
         if (search) {
-            query.name = { $regex: search, $options: 'i' };
+            query += ' AND name LIKE ?';
+            params.push(`%${search}%`);
         }
+        query += ' ORDER BY level ASC, id DESC';
         
-        const monsters = await db.collection('monsters').find(query).sort({ level: 1, _id: -1 }).toArray();
-        res.json({ data: monsters, count: monsters.length });
+        db.all(query, params, (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ data: rows, count: rows.length });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -178,38 +171,31 @@ app.get('/api/monsters', async (req, res) => {
 app.get('/api/monsters/:id', async (req, res) => {
     try {
         const db = getDB();
-        const { ObjectId } = require('mongodb');
         const { id } = req.params;
         
-        const monster = await db.collection('monsters').findOne({ _id: new ObjectId(id) });
-        if (!monster) return res.status(404).json({ error: '怪物不存在' });
-        
-        const spawns = await db.collection('monster_spawns')
-            .aggregate([
-                { $match: { monster_id: id } },
-                {
-                    $lookup: {
-                        from: 'maps',
-                        localField: 'map_id',
-                        foreignField: '_id',
-                        as: 'map'
-                    }
-                },
-                { $unwind: { path: '$map', preserveNullAndEmptyArrays: true } },
-                {
-                    $project: {
-                        _id: 1,
-                        monster_id: 1,
-                        map_id: 1,
-                        spawn_point: 1,
-                        refresh_time: 1,
-                        notes: 1,
-                        map_name: '$map.name'
-                    }
-                }
-            ]).toArray();
-        
-        res.json({ ...monster, spawns });
+        db.get('SELECT * FROM monsters WHERE id = ?', [id], (err, monster) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (!monster) return res.status(404).json({ error: '怪物不存在' });
+            
+            const sql = `
+                SELECT 
+                    s.id,
+                    s.monster_id,
+                    s.map_id,
+                    s.spawn_point,
+                    s.refresh_time,
+                    s.notes,
+                    mp.name as map_name
+                FROM monster_spawns s
+                LEFT JOIN maps mp ON s.map_id = mp.id
+                WHERE s.monster_id = ?
+            `;
+            
+            db.all(sql, [id], (err, spawns) => {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ ...monster, spawns });
+            });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -222,17 +208,12 @@ app.post('/api/monsters', async (req, res) => {
         
         if (!name) return res.status(400).json({ error: '怪物名称必填' });
         
-        const result = await db.collection('monsters').insertOne({
-            name,
-            level: level || 1,
-            hp: hp || 100,
-            attack: attack || 10,
-            defense: defense || 5,
-            description: description || '',
-            created_at: new Date()
-        });
+        const sql = `INSERT INTO monsters (name, level, hp, attack, defense, description) VALUES (?, ?, ?, ?, ?, ?)`;
         
-        res.json({ id: result.insertedId, message: '创建成功' });
+        db.run(sql, [name, level || 1, hp || 100, attack || 10, defense || 5, description || ''], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id: this.lastID, message: '创建成功' });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -241,16 +222,15 @@ app.post('/api/monsters', async (req, res) => {
 app.put('/api/monsters/:id', async (req, res) => {
     try {
         const db = getDB();
-        const { ObjectId } = require('mongodb');
         const { id } = req.params;
         const { name, level, hp, attack, defense, description } = req.body;
         
-        const result = await db.collection('monsters').updateOne(
-            { _id: new ObjectId(id) },
-            { $set: { name, level, hp, attack, defense, description } }
-        );
+        const sql = `UPDATE monsters SET name = ?, level = ?, hp = ?, attack = ?, defense = ?, description = ? WHERE id = ?`;
         
-        res.json({ changes: result.modifiedCount, message: '更新成功' });
+        db.run(sql, [name, level, hp, attack, defense, description, id], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ changes: this.changes, message: '更新成功' });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -259,11 +239,12 @@ app.put('/api/monsters/:id', async (req, res) => {
 app.delete('/api/monsters/:id', async (req, res) => {
     try {
         const db = getDB();
-        const { ObjectId } = require('mongodb');
         const { id } = req.params;
         
-        await db.collection('monsters').deleteOne({ _id: new ObjectId(id) });
-        res.json({ message: '删除成功' });
+        db.run('DELETE FROM monsters WHERE id = ?', [id], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: '删除成功' });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -273,14 +254,19 @@ app.get('/api/maps', async (req, res) => {
     try {
         const db = getDB();
         const { search } = req.query;
-        let query = {};
+        let query = 'SELECT * FROM maps WHERE 1=1';
+        const params = [];
         
         if (search) {
-            query.name = { $regex: search, $options: 'i' };
+            query += ' AND name LIKE ?';
+            params.push(`%${search}%`);
         }
+        query += ' ORDER BY id DESC';
         
-        const maps = await db.collection('maps').find(query).sort({ _id: -1 }).toArray();
-        res.json({ data: maps, count: maps.length });
+        db.all(query, params, (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ data: rows, count: rows.length });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -289,13 +275,14 @@ app.get('/api/maps', async (req, res) => {
 app.get('/api/maps/:id', async (req, res) => {
     try {
         const db = getDB();
-        const { ObjectId } = require('mongodb');
         const { id } = req.params;
         
-        const map = await db.collection('maps').findOne({ _id: new ObjectId(id) });
-        if (!map) return res.status(404).json({ error: '地图不存在' });
-        
-        res.json(map);
+        db.get('SELECT * FROM maps WHERE id = ?', [id], (err, map) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (!map) return res.status(404).json({ error: '地图不存在' });
+            
+            res.json(map);
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -308,14 +295,12 @@ app.post('/api/maps', async (req, res) => {
         
         if (!name) return res.status(400).json({ error: '地图名称必填' });
         
-        const result = await db.collection('maps').insertOne({
-            name,
-            description: description || '',
-            route_description: route_description || '',
-            created_at: new Date()
-        });
+        const sql = `INSERT INTO maps (name, description, route_description) VALUES (?, ?, ?)`;
         
-        res.json({ id: result.insertedId, message: '创建成功' });
+        db.run(sql, [name, description || '', route_description || ''], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id: this.lastID, message: '创建成功' });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -324,16 +309,15 @@ app.post('/api/maps', async (req, res) => {
 app.put('/api/maps/:id', async (req, res) => {
     try {
         const db = getDB();
-        const { ObjectId } = require('mongodb');
         const { id } = req.params;
         const { name, description, route_description } = req.body;
         
-        const result = await db.collection('maps').updateOne(
-            { _id: new ObjectId(id) },
-            { $set: { name, description, route_description } }
-        );
+        const sql = `UPDATE maps SET name = ?, description = ?, route_description = ? WHERE id = ?`;
         
-        res.json({ changes: result.modifiedCount, message: '更新成功' });
+        db.run(sql, [name, description, route_description, id], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ changes: this.changes, message: '更新成功' });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -342,11 +326,12 @@ app.put('/api/maps/:id', async (req, res) => {
 app.delete('/api/maps/:id', async (req, res) => {
     try {
         const db = getDB();
-        const { ObjectId } = require('mongodb');
         const { id } = req.params;
         
-        await db.collection('maps').deleteOne({ _id: new ObjectId(id) });
-        res.json({ message: '删除成功' });
+        db.run('DELETE FROM maps WHERE id = ?', [id], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: '删除成功' });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -356,52 +341,28 @@ app.get('/api/item-sources', async (req, res) => {
     try {
         const db = getDB();
         
-        const sources = await db.collection('item_sources')
-            .aggregate([
-                { $sort: { _id: -1 } },
-                {
-                    $lookup: {
-                        from: 'items',
-                        localField: 'item_id',
-                        foreignField: '_id',
-                        as: 'item'
-                    }
-                },
-                {
-                    $lookup: {
-                        from: 'monsters',
-                        localField: 'monster_id',
-                        foreignField: '_id',
-                        as: 'monster'
-                    }
-                },
-                {
-                    $lookup: {
-                        from: 'maps',
-                        localField: 'map_id',
-                        foreignField: '_id',
-                        as: 'map'
-                    }
-                },
-                { $unwind: { path: '$item', preserveNullAndEmptyArrays: true } },
-                { $unwind: { path: '$monster', preserveNullAndEmptyArrays: true } },
-                { $unwind: { path: '$map', preserveNullAndEmptyArrays: true } },
-                {
-                    $project: {
-                        _id: 1,
-                        item_id: 1,
-                        monster_id: 1,
-                        map_id: 1,
-                        drop_rate: 1,
-                        notes: 1,
-                        item_name: '$item.name',
-                        monster_name: '$monster.name',
-                        map_name: '$map.name'
-                    }
-                }
-            ]).toArray();
+        const sql = `
+            SELECT 
+                s.id,
+                s.item_id,
+                s.monster_id,
+                s.map_id,
+                s.drop_rate,
+                s.notes,
+                i.name as item_name,
+                m.name as monster_name,
+                mp.name as map_name
+            FROM item_sources s
+            LEFT JOIN items i ON s.item_id = i.id
+            LEFT JOIN monsters m ON s.monster_id = m.id
+            LEFT JOIN maps mp ON s.map_id = mp.id
+            ORDER BY s.id DESC
+        `;
         
-        res.json({ data: sources, count: sources.length });
+        db.all(sql, [], (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ data: rows, count: rows.length });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -416,15 +377,12 @@ app.post('/api/item-sources', async (req, res) => {
             return res.status(400).json({ error: '物品和怪物必填' });
         }
         
-        const result = await db.collection('item_sources').insertOne({
-            item_id,
-            monster_id,
-            map_id: map_id || null,
-            drop_rate: drop_rate || '',
-            notes: notes || ''
-        });
+        const sql = `INSERT INTO item_sources (item_id, monster_id, map_id, drop_rate, notes) VALUES (?, ?, ?, ?, ?)`;
         
-        res.json({ id: result.insertedId, message: '添加出处成功' });
+        db.run(sql, [item_id, monster_id, map_id || null, drop_rate || '', notes || ''], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id: this.lastID, message: '添加出处成功' });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -433,11 +391,12 @@ app.post('/api/item-sources', async (req, res) => {
 app.delete('/api/item-sources/:id', async (req, res) => {
     try {
         const db = getDB();
-        const { ObjectId } = require('mongodb');
         const { id } = req.params;
         
-        await db.collection('item_sources').deleteOne({ _id: new ObjectId(id) });
-        res.json({ message: '删除成功' });
+        db.run('DELETE FROM item_sources WHERE id = ?', [id], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: '删除成功' });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -447,42 +406,26 @@ app.get('/api/monster-spawns', async (req, res) => {
     try {
         const db = getDB();
         
-        const spawns = await db.collection('monster_spawns')
-            .aggregate([
-                { $sort: { _id: -1 } },
-                {
-                    $lookup: {
-                        from: 'monsters',
-                        localField: 'monster_id',
-                        foreignField: '_id',
-                        as: 'monster'
-                    }
-                },
-                {
-                    $lookup: {
-                        from: 'maps',
-                        localField: 'map_id',
-                        foreignField: '_id',
-                        as: 'map'
-                    }
-                },
-                { $unwind: { path: '$monster', preserveNullAndEmptyArrays: true } },
-                { $unwind: { path: '$map', preserveNullAndEmptyArrays: true } },
-                {
-                    $project: {
-                        _id: 1,
-                        monster_id: 1,
-                        map_id: 1,
-                        spawn_point: 1,
-                        refresh_time: 1,
-                        notes: 1,
-                        monster_name: '$monster.name',
-                        map_name: '$map.name'
-                    }
-                }
-            ]).toArray();
+        const sql = `
+            SELECT 
+                s.id,
+                s.monster_id,
+                s.map_id,
+                s.spawn_point,
+                s.refresh_time,
+                s.notes,
+                m.name as monster_name,
+                mp.name as map_name
+            FROM monster_spawns s
+            LEFT JOIN monsters m ON s.monster_id = m.id
+            LEFT JOIN maps mp ON s.map_id = mp.id
+            ORDER BY s.id DESC
+        `;
         
-        res.json({ data: spawns, count: spawns.length });
+        db.all(sql, [], (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ data: rows, count: rows.length });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -497,15 +440,12 @@ app.post('/api/monster-spawns', async (req, res) => {
             return res.status(400).json({ error: '怪物和地图必填' });
         }
         
-        const result = await db.collection('monster_spawns').insertOne({
-            monster_id,
-            map_id,
-            spawn_point: spawn_point || '',
-            refresh_time: refresh_time || null,
-            notes: notes || ''
-        });
+        const sql = `INSERT INTO monster_spawns (monster_id, map_id, spawn_point, refresh_time, notes) VALUES (?, ?, ?, ?, ?)`;
         
-        res.json({ id: result.insertedId, message: '添加刷新点成功' });
+        db.run(sql, [monster_id, map_id, spawn_point || '', refresh_time || null, notes || ''], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id: this.lastID, message: '添加刷新点成功' });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -514,11 +454,12 @@ app.post('/api/monster-spawns', async (req, res) => {
 app.delete('/api/monster-spawns/:id', async (req, res) => {
     try {
         const db = getDB();
-        const { ObjectId } = require('mongodb');
         const { id } = req.params;
         
-        await db.collection('monster_spawns').deleteOne({ _id: new ObjectId(id) });
-        res.json({ message: '删除成功' });
+        db.run('DELETE FROM monster_spawns WHERE id = ?', [id], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: '删除成功' });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -528,32 +469,24 @@ app.get('/api/npcs', async (req, res) => {
     try {
         const db = getDB();
         
-        const npcs = await db.collection('npcs')
-            .aggregate([
-                { $sort: { _id: -1 } },
-                {
-                    $lookup: {
-                        from: 'maps',
-                        localField: 'map_id',
-                        foreignField: '_id',
-                        as: 'map'
-                    }
-                },
-                { $unwind: { path: '$map', preserveNullAndEmptyArrays: true } },
-                {
-                    $project: {
-                        _id: 1,
-                        name: 1,
-                        map_id: 1,
-                        position: 1,
-                        function: 1,
-                        dialogue: 1,
-                        map_name: '$map.name'
-                    }
-                }
-            ]).toArray();
+        const sql = `
+            SELECT 
+                n.id,
+                n.name,
+                n.map_id,
+                n.position,
+                n.function,
+                n.dialogue,
+                m.name as map_name
+            FROM npcs n
+            LEFT JOIN maps m ON n.map_id = m.id
+            ORDER BY n.id DESC
+        `;
         
-        res.json({ data: npcs, count: npcs.length });
+        db.all(sql, [], (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ data: rows, count: rows.length });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -566,16 +499,12 @@ app.post('/api/npcs', async (req, res) => {
         
         if (!name) return res.status(400).json({ error: 'NPC 名称必填' });
         
-        const result = await db.collection('npcs').insertOne({
-            name,
-            map_id: map_id || null,
-            position: position || '',
-            function: npcFunction || '',
-            dialogue: dialogue || '',
-            created_at: new Date()
-        });
+        const sql = `INSERT INTO npcs (name, map_id, position, function, dialogue) VALUES (?, ?, ?, ?, ?)`;
         
-        res.json({ id: result.insertedId, message: '创建成功' });
+        db.run(sql, [name, map_id || null, position || '', npcFunction || '', dialogue || ''], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id: this.lastID, message: '创建成功' });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -584,16 +513,15 @@ app.post('/api/npcs', async (req, res) => {
 app.put('/api/npcs/:id', async (req, res) => {
     try {
         const db = getDB();
-        const { ObjectId } = require('mongodb');
         const { id } = req.params;
         const { name, map_id, position, function: npcFunction, dialogue } = req.body;
         
-        const result = await db.collection('npcs').updateOne(
-            { _id: new ObjectId(id) },
-            { $set: { name, map_id, position, function: npcFunction, dialogue } }
-        );
+        const sql = `UPDATE npcs SET name = ?, map_id = ?, position = ?, function = ?, dialogue = ? WHERE id = ?`;
         
-        res.json({ changes: result.modifiedCount, message: '更新成功' });
+        db.run(sql, [name, map_id, position, npcFunction, dialogue, id], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ changes: this.changes, message: '更新成功' });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -602,11 +530,12 @@ app.put('/api/npcs/:id', async (req, res) => {
 app.delete('/api/npcs/:id', async (req, res) => {
     try {
         const db = getDB();
-        const { ObjectId } = require('mongodb');
         const { id } = req.params;
         
-        await db.collection('npcs').deleteOne({ _id: new ObjectId(id) });
-        res.json({ message: '删除成功' });
+        db.run('DELETE FROM npcs WHERE id = ?', [id], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: '删除成功' });
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -616,18 +545,22 @@ app.get('/api/stats', async (req, res) => {
     try {
         const db = getDB();
         
-        const items = await db.collection('items').countDocuments();
-        const monsters = await db.collection('monsters').countDocuments();
-        const maps = await db.collection('maps').countDocuments();
-        const npcs = await db.collection('npcs').countDocuments();
-        const item_sources = await db.collection('item_sources').countDocuments();
+        const tables = ['items', 'monsters', 'maps', 'npcs', 'item_sources'];
+        const stats = {};
         
-        res.json({
-            items,
-            monsters,
-            maps,
-            npcs,
-            item_sources
+        const countPromises = tables.map(table => {
+            return new Promise((resolve) => {
+                db.get(`SELECT COUNT(*) as count FROM ${table}`, [], (err, row) => {
+                    resolve({ table, count: row ? row.count : 0 });
+                });
+            });
+        });
+        
+        Promise.all(countPromises).then(results => {
+            results.forEach(({ table, count }) => {
+                stats[table] = count;
+            });
+            res.json(stats);
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -640,8 +573,8 @@ app.listen(PORT, () => {
     ║     大展宏图 - 游戏数据管理系统          ║
     ════════════════════════════════════════╣
       🌐 前端查询：http://localhost:${PORT}    ║
-    ║  ⚙️ 后台管理：http://localhost:${PORT}/admin.html ║
-    ║  💾 数据库：MongoDB Atlas               ║
+    ║  ️ 后台管理：http://localhost:${PORT}/admin.html ║
+    ║  💾 数据库：SQLite                       ║
     ╚════════════════════════════════════════╝
     `);
 });
