@@ -12,25 +12,24 @@
 
 ### 步骤 1: 创建 GitHub 仓库 [ ]
 - [ ] 注册 GitHub: https://github.com
-- [ ] 创建新仓库: `game-query-system`
+- [ ] 创建新仓库：`game-query-system`
 - [ ] 上传代码（使用 GitHub Desktop 或 Git 命令）
 
-### 步骤 2: 部署到 Render [ ]
-- [ ] 注册 Render: https://render.com
-- [ ] 创建 Web Service
-- [ ] 连接 GitHub 仓库
-- [ ] 配置：
-  - Region: Singapore
-  - Build Command: `npm install`
-  - Start Command: `node server.js`
-  - Instance Type: Free
+### 步骤 2: 部署到 Zeabur（推荐！无需信用卡）[ ]
+- [ ] 注册 Zeabur: https://zeabur.com
+- [ ] 使用 GitHub 登录
+- [ ] 创建项目：`game-query`
+- [ ] 创建服务，连接 GitHub 仓库
+- [ ] 选择 Region: Singapore
 - [ ] 等待部署完成
-- [ ] **复制你的 Render 地址**：`https://game-query-system-xxxxx.onrender.com`
+- [ ] **复制你的 Zeabur 地址**：`https://game-query-xxxxx.zeabur.app`
+
+📖 **详细指南：** 查看 [`ZEABUR_DEPLOY.md`](ZEABUR_DEPLOY.md)
 
 ### 步骤 3: 修改前端 API 地址 [ ]
 - [ ] 打开 `public/index.html`
 - [ ] 搜索 `const API_BASE`
-- [ ] 修改为：`const API_BASE = 'https://你的-render-地址.onrender.com/api';`
+- [ ] 修改为：`const API_BASE = 'https://你的-zeabur 地址.zeabur.app/api';`
 - [ ] 打开 `public/admin.html`
 - [ ] 同样修改 API 地址
 - [ ] 保存并推送到 GitHub
@@ -62,7 +61,7 @@
 ### 你的地址记录
 
 ```
-Render API 地址：https://______________________.onrender.com
+Zeabur API 地址：https://______________________.zeabur.app
 Cloudflare Pages: https://____________________.pages.dev
 ```
 
@@ -84,14 +83,14 @@ git log --oneline
 
 ## ⚠️ 重要提醒
 
-1. **Render 免费版限制**
-   - 15 分钟无访问会休眠
-   - 下次访问需 30 秒唤醒
-   - 使用 UptimeRobot 避免休眠
+1. **Zeabur 免费额度**
+   - 每月 $5 USD 免费额度
+   - Node.js 项目约消耗 $1-2/月
+   - 足够使用，不用担心
 
 2. **数据库**
-   - SQLite 在 Render 上是临时的
-   - 服务重启数据会保留（除非删除服务）
+   - Zeabur 使用持久化存储
+   - 服务重启数据不会丢失
    - 重要数据建议定期备份
 
 3. **API 地址**

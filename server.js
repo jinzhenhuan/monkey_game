@@ -11,6 +11,16 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
 
+// 根路径路由
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+// admin.html 路由
+app.get('/admin.html', (req, res) => {
+    res.sendFile(path.join(__dirname, 'public', 'admin.html'));
+});
+
 // 初始化数据库
 const db = new sqlite3.Database('./game_data.db', (err) => {
     if (err) {
