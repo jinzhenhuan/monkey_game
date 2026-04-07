@@ -1,228 +1,1044 @@
-<!DOCTYPE html>
+
+admin_html = '''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大展宏图 - 后台管理系统</title>
+    <title>小猴子游戏 - 后台管理系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif; background: #f0f2f5; min-height: 100vh; }
-        .admin-container { display: flex; min-height: 100vh; }
-        .sidebar { width: 240px; background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%); color: white; position: fixed; height: 100vh; overflow-y: auto; }
-        .sidebar-header { padding: 24px 20px; border-bottom: 1px solid rgba(255,255,255,0.1); }
-        .sidebar-header h1 { font-size: 18px; font-weight: 600; }
-        .sidebar-header p { font-size: 12px; color: #a0aec0; margin-top: 4px; }
-        .nav-menu { padding: 16px 0; }
-        .nav-item { display: flex; align-items: center; padding: 14px 24px; cursor: pointer; transition: all 0.3s; gap: 12px; font-size: 14px; color: #cbd5e0; border-left: 3px solid transparent; }
-        .nav-item:hover { background: rgba(255,255,255,0.05); color: white; }
-        .nav-item.active { background: rgba(66, 153, 225, 0.15); color: #63b3ed; border-left-color: #63b3ed; }
-        .nav-icon { width: 20px; text-align: center; }
-        .main-content { flex: 1; margin-left: 240px; padding: 24px 32px; }
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
-        .page-title { font-size: 24px; font-weight: 600; color: #1a202c; }
-        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 32px; }
-        .stat-card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; gap: 16px; }
-        .stat-icon { width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #f0f2f5;
+            min-height: 100vh;
+        }
+
+        /* 布局 */
+        .admin-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 侧边栏 */
+        .sidebar {
+            width: 240px;
+            background: linear-gradient(180deg, #1a202c 0%, #2d3748 100%);
+            color: white;
+            position: fixed;
+            height: 100vh;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sidebar-header h1 {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-header p {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-top: 4px;
+        }
+
+        .nav-menu {
+            padding: 16px 0;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 24px;
+            cursor: pointer;
+            transition: all 0.3s;
+            gap: 12px;
+            font-size: 14px;
+            color: #cbd5e0;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(255,255,255,0.05);
+            color: white;
+        }
+
+        .nav-item.active {
+            background: rgba(66, 153, 225, 0.15);
+            color: #63b3ed;
+            border-left-color: #63b3ed;
+        }
+
+        .nav-icon {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* 移动端菜单按钮 */
+        .mobile-menu-btn {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #1a202c;
+            padding: 8px;
+        }
+
+        /* 移动端遮罩 */
+        .mobile-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 999;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            margin-left: 240px;
+            padding: 24px 32px;
+        }
+
+        /* 顶部栏 */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a202c;
+        }
+
+        .top-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* 统计卡片 */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .stat-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
         .stat-icon.blue { background: #ebf8ff; }
         .stat-icon.green { background: #f0fff4; }
         .stat-icon.orange { background: #fffaf0; }
         .stat-icon.purple { background: #faf5ff; }
-        .stat-info h3 { font-size: 28px; font-weight: 700; color: #2d3748; }
-        .stat-info p { font-size: 13px; color: #718096; margin-top: 2px; }
-        .action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 16px; }
-        .search-box { display: flex; align-items: center; background: white; border-radius: 8px; padding: 10px 16px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); flex: 1; max-width: 400px; }
-        .search-box input { border: none; outline: none; flex: 1; margin-left: 10px; font-size: 14px; }
-        .btn { padding: 10px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 14px; font-weight: 500; display: inline-flex; align-items: center; gap: 8px; transition: all 0.3s; }
-        .btn-primary { background: #4299e1; color: white; }
-        .btn-primary:hover { background: #3182ce; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3); }
-        .btn-danger { background: #fc8181; color: white; }
-        .btn-danger:hover { background: #f56565; }
-        .btn-secondary { background: #edf2f7; color: #4a5568; }
-        .btn-secondary:hover { background: #e2e8f0; }
-        .btn-sm { padding: 6px 12px; font-size: 13px; }
-        .data-table-container { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); overflow: hidden; }
-        .data-table { width: 100%; border-collapse: collapse; }
-        .data-table th { background: #f7fafc; padding: 14px 20px; text-align: left; font-size: 12px; font-weight: 600; color: #4a5568; border-bottom: 1px solid #e2e8f0; }
-        .data-table td { padding: 16px 20px; border-bottom: 1px solid #edf2f7; font-size: 14px; color: #2d3748; }
-        .data-table tr:hover { background: #f7fafc; }
-        .data-table tr:last-child td { border-bottom: none; }
-        .tag { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 500; }
+
+        .stat-info h3 {
+            font-size: 28px;
+            font-weight: 700;
+            color: #2d3748;
+        }
+
+        .stat-info p {
+            font-size: 13px;
+            color: #718096;
+            margin-top: 2px;
+        }
+
+        /* 操作栏 */
+        .action-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            gap: 16px;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: white;
+            border-radius: 8px;
+            padding: 10px 16px;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            flex: 1;
+            max-width: 400px;
+        }
+
+        .search-box input {
+            border: none;
+            outline: none;
+            flex: 1;
+            margin-left: 10px;
+            font-size: 14px;
+        }
+
+        /* 按钮 */
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #3182ce;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+        }
+
+        .btn-danger {
+            background: #fc8181;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #f56565;
+        }
+
+        .btn-secondary {
+            background: #edf2f7;
+            color: #4a5568;
+        }
+
+        .btn-secondary:hover {
+            background: #e2e8f0;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 13px;
+        }
+
+        /* 数据表格 */
+        .data-table-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background: #f7fafc;
+            padding: 14px 20px;
+            text-align: left;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .data-table td {
+            padding: 16px 20px;
+            border-bottom: 1px solid #edf2f7;
+            font-size: 14px;
+            color: #2d3748;
+        }
+
+        .data-table tr:hover {
+            background: #f7fafc;
+        }
+
+        .data-table tr:last-child td {
+            border-bottom: none;
+        }
+
+        /* 标签 */
+        .tag {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
         .tag-blue { background: #ebf8ff; color: #2b6cb0; }
         .tag-green { background: #f0fff4; color: #276749; }
         .tag-orange { background: #fffaf0; color: #c05621; }
         .tag-gray { background: #edf2f7; color: #4a5568; }
-        .empty-state { text-align: center; padding: 60px 20px; color: #a0aec0; }
-        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center; }
-        .modal-overlay.active { display: flex; }
-        .modal { background: white; border-radius: 16px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-        .modal-header { padding: 24px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
-        .modal-header h2 { font-size: 18px; font-weight: 600; }
-        .modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #a0aec0; }
-        .modal-body { padding: 24px; }
-        .modal-footer { padding: 20px 24px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 12px; }
-        .form-group { margin-bottom: 20px; }
-        .form-label { display: block; font-size: 14px; font-weight: 500; color: #4a5568; margin-bottom: 8px; }
-        .form-input, .form-select, .form-textarea { width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; outline: none; transition: all 0.3s; }
-        .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: #4299e1; box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1); }
-        .form-textarea { min-height: 100px; resize: vertical; }
-        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .toast { position: fixed; top: 24px; right: 24px; padding: 16px 24px; background: white; border-radius: 12px; box-shadow: 0 10px 40px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 12px; z-index: 2000; transform: translateX(400px); transition: transform 0.3s; }
-        .toast.show { transform: translateX(0); }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #a0aec0;
+        }
+
+        .empty-state-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        /* 模态框 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .modal-header {
+            padding: 24px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #a0aec0;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .modal-footer {
+            padding: 20px 24px;
+            border-top: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* 表单 */
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 14px;
+            font-weight: 500;
+            color: #4a5568;
+            margin-bottom: 8px;
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .form-input:focus,
+        .form-select:focus,
+        .form-textarea:focus {
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+
+        .form-textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .form-hint {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-top: 6px;
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+
+        /* 关联选择器 */
+        .relation-selector {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .relation-selector select {
+            flex: 1;
+        }
+
+        /* 响应式 */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: relative;
+                height: auto;
+            }
+            
+            .main-content {
+                margin-left: 0;
+            }
+            
+            .admin-container {
+                flex-direction: column;
+            }
+            
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 加载状态 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #e2e8f0;
+            border-top-color: #4299e1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Toast 提示 */
+        .toast {
+            position: fixed;
+            top: 24px;
+            right: 24px;
+            padding: 16px 24px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: transform 0.3s;
+        }
+
+        .toast.show {
+            transform: translateX(0);
+        }
+
         .toast.success { border-left: 4px solid #48bb78; }
         .toast.error { border-left: 4px solid #f56565; }
+
+        .toast-icon {
+            font-size: 20px;
+        }
+
+        /* 标签页 */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid #e2e8f0;
+            padding-bottom: 12px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+            color: #718096;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+
+        .tab:hover {
+            background: #f7fafc;
+            color: #4a5568;
+        }
+
+        .tab.active {
+            background: #ebf8ff;
+            color: #2b6cb0;
+            font-weight: 500;
+        }
+
+        /* 隐藏 */
         .hidden { display: none !important; }
+
+        /* 移动端适配 */
+        @media (max-width: 768px) {
+            /* 侧边栏 */
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+                z-index: 1000;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            /* 主内容区 */
+            .main-content {
+                margin-left: 0;
+                padding: 16px;
+            }
+
+            /* 顶部栏 */
+            .top-bar {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 12px;
+            }
+
+            .page-title {
+                font-size: 20px;
+            }
+
+            .top-actions {
+                width: 100%;
+                justify-content: space-between;
+            }
+
+            /* 显示移动端菜单按钮 */
+            .mobile-menu-btn {
+                display: block;
+                position: fixed;
+                top: 16px;
+                right: 16px;
+                z-index: 1001;
+                background: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            }
+
+            /* 移动端遮罩 */
+            .mobile-overlay {
+                display: none;
+            }
+
+            .mobile-overlay.active {
+                display: block;
+            }
+
+            /* 统计卡片 */
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 16px;
+            }
+
+            .stat-icon {
+                width: 40px;
+                height: 40px;
+                font-size: 20px;
+            }
+
+            .stat-info h3 {
+                font-size: 24px;
+            }
+
+            /* 操作栏 */
+            .action-bar {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .search-box {
+                max-width: 100%;
+                width: 100%;
+            }
+
+            .btn {
+                width: 100%;
+                justify-content: center;
+            }
+
+            /* 表格 */
+            .data-table-container {
+                overflow-x: auto;
+                border-radius: 8px;
+            }
+
+            .data-table {
+                min-width: 600px;
+            }
+
+            /* 模态框 */
+            .modal {
+                width: 95%;
+                max-height: 95vh;
+            }
+
+            .modal-body {
+                max-height: 60vh;
+            }
+
+            /* 表单 */
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+
+            /* Toast */
+            .toast {
+                left: 16px;
+                right: 16px;
+                max-width: none;
+            }
+        }
     </style>
 </head>
 <body>
+    <!-- 移动端菜单按钮 -->
+    <button class="mobile-menu-btn" onclick="toggleSidebar()">☰</button>
+    
+    <!-- 移动端遮罩 -->
+    <div class="mobile-overlay" onclick="toggleSidebar()"></div>
+    
     <div class="admin-container">
+        <!-- 侧边栏 -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h1>🐒 大展宏图</h1>
+                <h1>🐒 小猴子游戏</h1>
                 <p>后台管理系统</p>
             </div>
             <nav class="nav-menu">
                 <div class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
-                    <span class="nav-icon">📊</span><span>数据概览</span>
+                    <span class="nav-icon">📊</span>
+                    <span>数据概览</span>
                 </div>
                 <div class="nav-item" data-page="items" onclick="showPage('items')">
-                    <span class="nav-icon">📦</span><span>物品管理</span>
+                    <span class="nav-icon">📦</span>
+                    <span>物品管理</span>
                 </div>
                 <div class="nav-item" data-page="monsters" onclick="showPage('monsters')">
-                    <span class="nav-icon">👹</span><span>怪物管理</span>
+                    <span class="nav-icon">👹</span>
+                    <span>怪物管理</span>
                 </div>
                 <div class="nav-item" data-page="maps" onclick="showPage('maps')">
-                    <span class="nav-icon">🗺️</span><span>地图管理</span>
+                    <span class="nav-icon">🗺️</span>
+                    <span>地图管理</span>
                 </div>
                 <div class="nav-item" data-page="sources" onclick="showPage('sources')">
-                    <span class="nav-icon">🔗</span><span>物品出处</span>
+                    <span class="nav-icon">🔗</span>
+                    <span>物品出处</span>
                 </div>
                 <div class="nav-item" data-page="spawns" onclick="showPage('spawns')">
-                    <span class="nav-icon">📍</span><span>怪物刷新</span>
+                    <span class="nav-icon">📍</span>
+                    <span>怪物刷新</span>
                 </div>
                 <div class="nav-item" data-page="npcs" onclick="showPage('npcs')">
-                    <span class="nav-icon">🧙</span><span>NPC 管理</span>
+                    <span class="nav-icon">🧙</span>
+                    <span>NPC管理</span>
                 </div>
             </nav>
         </aside>
+
+        <!-- 主内容 -->
         <main class="main-content">
+            <!-- 数据概览页 -->
             <div id="page-dashboard" class="page-content">
                 <div class="top-bar">
                     <h1 class="page-title">📊 数据概览</h1>
                     <a href="/" target="_blank" class="btn btn-secondary">🌐 查看前台网站</a>
                 </div>
+                
                 <div class="stats-grid">
-                    <div class="stat-card"><div class="stat-icon blue">📦</div><div class="stat-info"><h3 id="stat-items">0</h3><p>物品总数</p></div></div>
-                    <div class="stat-card"><div class="stat-icon green">👹</div><div class="stat-info"><h3 id="stat-monsters">0</h3><p>怪物总数</p></div></div>
-                    <div class="stat-card"><div class="stat-icon orange">🗺️</div><div class="stat-info"><h3 id="stat-maps">0</h3><p>地图总数</p></div></div>
-                    <div class="stat-card"><div class="stat-icon purple">🧙</div><div class="stat-info"><h3 id="stat-npcs">0</h3><p>NPC 总数</p></div></div>
+                    <div class="stat-card">
+                        <div class="stat-icon blue">📦</div>
+                        <div class="stat-info">
+                            <h3 id="stat-items">0</h3>
+                            <p>物品总数</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon green">👹</div>
+                        <div class="stat-info">
+                            <h3 id="stat-monsters">0</h3>
+                            <p>怪物总数</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon orange">🗺️</div>
+                        <div class="stat-info">
+                            <h3 id="stat-maps">0</h3>
+                            <p>地图总数</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon purple">🧙</div>
+                        <div class="stat-info">
+                            <h3 id="stat-npcs">0</h3>
+                            <p>NPC总数</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background: white; padding: 24px; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <h3 style="margin-bottom: 16px; color: #2d3748;">🚀 快速开始</h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
+                        <div style="padding: 16px; background: #f7fafc; border-radius: 8px; border-left: 4px solid #4299e1;">
+                            <h4 style="color: #2d3748; margin-bottom: 8px;">第一步：添加基础数据</h4>
+                            <p style="font-size: 13px; color: #718096;">先添加地图 → 怪物 → 物品</p>
+                        </div>
+                        <div style="padding: 16px; background: #f7fafc; border-radius: 8px; border-left: 4px solid #48bb78;">
+                            <h4 style="color: #2d3748; margin-bottom: 8px;">第二步：建立关联</h4>
+                            <p style="font-size: 13px; color: #718096;">在"物品出处"关联物品和怪物</p>
+                        </div>
+                        <div style="padding: 16px; background: #f7fafc; border-radius: 8px; border-left: 4px solid #ed8936;">
+                            <h4 style="color: #2d3748; margin-bottom: 8px;">第三步：查看前台</h4>
+                            <p style="font-size: 13px; color: #718096;">点击右上角查看前台效果</p>
+                        </div>
+                    </div>
                 </div>
             </div>
+
+            <!-- 物品管理页 -->
             <div id="page-items" class="page-content hidden">
-                <div class="top-bar"><h1 class="page-title">📦 物品管理</h1></div>
+                <div class="top-bar">
+                    <h1 class="page-title">📦 物品管理</h1>
+                </div>
+                
                 <div class="action-bar">
-                    <div class="search-box"><span>🔍</span><input type="text" id="item-search" placeholder="搜索物品名称..." oninput="loadItems()"></div>
+                    <div class="search-box">
+                        <span>🔍</span>
+                        <input type="text" id="item-search" placeholder="搜索物品名称..." oninput="loadItems()">
+                    </div>
                     <button class="btn btn-primary" onclick="openModal('item')">➕ 添加物品</button>
                 </div>
+
                 <div class="data-table-container">
                     <table class="data-table">
-                        <thead><tr><th>ID</th><th>物品名称</th><th>类型</th><th>等级要求</th><th>描述</th><th>操作</th></tr></thead>
-                        <tbody id="items-table-body"></tbody>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>物品名称</th>
+                                <th>类型</th>
+                                <th>等级要求</th>
+                                <th>描述</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="items-table-body">
+                            <!-- 动态生成 -->
+                        </tbody>
                     </table>
                 </div>
             </div>
+
+            <!-- 怪物管理页 -->
             <div id="page-monsters" class="page-content hidden">
-                <div class="top-bar"><h1 class="page-title">👹 怪物管理</h1></div>
+                <div class="top-bar">
+                    <h1 class="page-title">👹 怪物管理</h1>
+                </div>
+                
                 <div class="action-bar">
-                    <div class="search-box"><span>🔍</span><input type="text" id="monster-search" placeholder="搜索怪物名称..." oninput="loadMonsters()"></div>
+                    <div class="search-box">
+                        <span>🔍</span>
+                        <input type="text" id="monster-search" placeholder="搜索怪物名称..." oninput="loadMonsters()">
+                    </div>
                     <button class="btn btn-primary" onclick="openModal('monster')">➕ 添加怪物</button>
                 </div>
+
                 <div class="data-table-container">
                     <table class="data-table">
-                        <thead><tr><th>ID</th><th>怪物名称</th><th>等级</th><th>血量</th><th>攻击</th><th>防御</th><th>操作</th></tr></thead>
-                        <tbody id="monsters-table-body"></tbody>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>怪物名称</th>
+                                <th>等级</th>
+                                <th>血量</th>
+                                <th>攻击</th>
+                                <th>防御</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="monsters-table-body">
+                            <!-- 动态生成 -->
+                        </tbody>
                     </table>
                 </div>
             </div>
+
+            <!-- 地图管理页 -->
             <div id="page-maps" class="page-content hidden">
-                <div class="top-bar"><h1 class="page-title">🗺️ 地图管理</h1></div>
+                <div class="top-bar">
+                    <h1 class="page-title">🗺️ 地图管理</h1>
+                </div>
+                
                 <div class="action-bar">
-                    <div class="search-box"><span>🔍</span><input type="text" id="map-search" placeholder="搜索地图名称..." oninput="loadMaps()"></div>
+                    <div class="search-box">
+                        <span>🔍</span>
+                        <input type="text" id="map-search" placeholder="搜索地图名称..." oninput="loadMaps()">
+                    </div>
                     <button class="btn btn-primary" onclick="openModal('map')">➕ 添加地图</button>
                 </div>
+
                 <div class="data-table-container">
                     <table class="data-table">
-                        <thead><tr><th>ID</th><th>地图名称</th><th>描述</th><th>走法说明</th><th>操作</th></tr></thead>
-                        <tbody id="maps-table-body"></tbody>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>地图名称</th>
+                                <th>描述</th>
+                                <th>走法说明</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="maps-table-body">
+                            <!-- 动态生成 -->
+                        </tbody>
                     </table>
                 </div>
             </div>
+
+            <!-- 物品出处页 -->
             <div id="page-sources" class="page-content hidden">
-                <div class="top-bar"><h1 class="page-title">🔗 物品出处管理</h1></div>
-                <div class="action-bar"><div style="flex: 1;"></div><button class="btn btn-primary" onclick="openModal('source')">➕ 添加出处关联</button></div>
-                <div class="data-table-container">
-                    <table class="data-table">
-                        <thead><tr><th>ID</th><th>物品</th><th>掉落怪物</th><th>地图</th><th>爆率</th><th>备注</th><th>操作</th></tr></thead>
-                        <tbody id="sources-table-body"></tbody>
-                    </table>
+                <div class="top-bar">
+                    <h1 class="page-title">🔗 物品出处管理</h1>
                 </div>
-            </div>
-            <div id="page-spawns" class="page-content hidden">
-                <div class="top-bar"><h1 class="page-title">📍 怪物刷新管理</h1></div>
-                <div class="action-bar"><div style="flex: 1;"></div><button class="btn btn-primary" onclick="openModal('spawn')">➕ 添加刷新点</button></div>
-                <div class="data-table-container">
-                    <table class="data-table">
-                        <thead><tr><th>ID</th><th>怪物</th><th>地图</th><th>刷新坐标</th><th>刷新时间</th><th>备注</th><th>操作</th></tr></thead>
-                        <tbody id="spawns-table-body"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div id="page-npcs" class="page-content hidden">
-                <div class="top-bar"><h1 class="page-title">🧙 NPC 管理</h1></div>
+                
                 <div class="action-bar">
-                    <div class="search-box"><span>🔍</span><input type="text" id="npc-search" placeholder="搜索 NPC 名称..." oninput="loadNpcs()"></div>
-                    <button class="btn btn-primary" onclick="openModal('npc')">➕ 添加 NPC</button>
+                    <div style="flex: 1;"></div>
+                    <button class="btn btn-primary" onclick="openModal('source')">➕ 添加出处关联</button>
                 </div>
+
                 <div class="data-table-container">
                     <table class="data-table">
-                        <thead><tr><th>ID</th><th>NPC 名称</th><th>所在地图</th><th>坐标</th><th>功能</th><th>操作</th></tr></thead>
-                        <tbody id="npcs-table-body"></tbody>
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>物品</th>
+                                <th>掉落怪物</th>
+                                <th>地图</th>
+                                <th>爆率</th>
+                                <th>备注</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="sources-table-body">
+                            <!-- 动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 怪物刷新页 -->
+            <div id="page-spawns" class="page-content hidden">
+                <div class="top-bar">
+                    <h1 class="page-title">📍 怪物刷新管理</h1>
+                </div>
+                
+                <div class="action-bar">
+                    <div style="flex: 1;"></div>
+                    <button class="btn btn-primary" onclick="openModal('spawn')">➕ 添加刷新点</button>
+                </div>
+
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>怪物</th>
+                                <th>地图</th>
+                                <th>刷新坐标</th>
+                                <th>刷新时间</th>
+                                <th>备注</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="spawns-table-body">
+                            <!-- 动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- NPC管理页 -->
+            <div id="page-npcs" class="page-content hidden">
+                <div class="top-bar">
+                    <h1 class="page-title">🧙 NPC管理</h1>
+                </div>
+                
+                <div class="action-bar">
+                    <div class="search-box">
+                        <span>🔍</span>
+                        <input type="text" id="npc-search" placeholder="搜索NPC名称..." oninput="loadNpcs()">
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('npc')">➕ 添加NPC</button>
+                </div>
+
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>NPC名称</th>
+                                <th>所在地图</th>
+                                <th>坐标</th>
+                                <th>功能</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="npcs-table-body">
+                            <!-- 动态生成 -->
+                        </tbody>
                     </table>
                 </div>
             </div>
         </main>
     </div>
+
+    <!-- 模态框 -->
     <div class="modal-overlay" id="modal">
         <div class="modal">
             <div class="modal-header">
                 <h2 id="modal-title">添加</h2>
                 <button class="modal-close" onclick="closeModal()">&times;</button>
             </div>
-            <div class="modal-body" id="modal-body"></div>
+            <div class="modal-body" id="modal-body">
+                <!-- 动态表单 -->
+            </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" onclick="closeModal()">取消</button>
                 <button class="btn btn-primary" id="modal-submit" onclick="submitForm()">保存</button>
             </div>
         </div>
     </div>
+
+    <!-- Toast -->
     <div class="toast" id="toast">
         <span class="toast-icon" id="toast-icon">✅</span>
         <span id="toast-message">操作成功</span>
     </div>
-    <script>
-        const API_BASE = '/api';
-        let currentPage = 'dashboard', editingId = null, editingType = null;
-        let cache = { items: [], monsters: [], maps: [], npcs: [] };
 
+    <script>
+        // API 基础地址
+        const API_BASE = 'http://localhost:3000/api';
+        
+        // 当前页面和编辑状态
+        let currentPage = 'dashboard';
+        let editingId = null;
+        let editingType = null;
+
+        // 缓存数据（用于下拉选择）
+        let cache = {
+            items: [],
+            monsters: [],
+            maps: [],
+            npcs: []
+        };
+
+        // 移动端侧边栏控制
+        function toggleSidebar() {
+            const sidebar = document.querySelector('.sidebar');
+            const overlay = document.querySelector('.mobile-overlay');
+            sidebar.classList.toggle('open');
+            overlay.classList.toggle('active');
+        }
+
+        // 初始化
         document.addEventListener('DOMContentLoaded', function() {
-            loadStats(); loadItems(); loadMonsters(); loadMaps(); loadNpcs(); loadSources(); loadSpawns();
+            loadStats();
+            loadItems();
+            loadMonsters();
+            loadMaps();
+            loadNpcs();
+            loadSources();
+            loadSpawns();
         });
 
+        // 切换页面
         function showPage(page) {
             currentPage = page;
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            
+            // 更新导航
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
             document.querySelector(`[data-page="${page}"]`).classList.add('active');
-            document.querySelectorAll('.page-content').forEach(content => content.classList.add('hidden'));
+            
+            // 更新内容
+            document.querySelectorAll('.page-content').forEach(content => {
+                content.classList.add('hidden');
+            });
             document.getElementById(`page-${page}`).classList.remove('hidden');
+            
+            // 刷新数据
             if (page === 'dashboard') loadStats();
             if (page === 'items') loadItems();
             if (page === 'monsters') loadMonsters();
@@ -232,6 +1048,7 @@
             if (page === 'npcs') loadNpcs();
         }
 
+        // 加载统计数据
         async function loadStats() {
             try {
                 const res = await fetch(`${API_BASE}/stats`);
@@ -240,200 +1057,595 @@
                 document.getElementById('stat-monsters').textContent = data.monsters;
                 document.getElementById('stat-maps').textContent = data.maps;
                 document.getElementById('stat-npcs').textContent = data.npcs;
-            } catch (err) { console.error('加载统计失败:', err); }
+            } catch (err) {
+                console.error('加载统计失败:', err);
+            }
         }
 
+        // 加载物品列表
         async function loadItems() {
             const search = document.getElementById('item-search')?.value || '';
             try {
                 const res = await fetch(`${API_BASE}/items?search=${search}`);
                 const data = await res.json();
                 cache.items = data.data;
+                
                 const tbody = document.getElementById('items-table-body');
                 tbody.innerHTML = data.data.map(item => `
-                    <tr><td>${item.id}</td><td><strong>${item.name}</strong></td><td><span class="tag tag-blue">${item.type || '未分类'}</span></td><td>${item.level_requirement || 0}</td><td>${item.description || '-'}</td>
-                    <td><button class="btn btn-sm btn-secondary" onclick="editItem(${item.id})">编辑</button><button class="btn btn-sm btn-danger" onclick="deleteItem(${item.id})">删除</button></td></tr>
+                    <tr>
+                        <td>${item.id}</td>
+                        <td><strong>${item.name}</strong></td>
+                        <td><span class="tag tag-blue">${item.type || '未分类'}</span></td>
+                        <td>${item.level_requirement || 0}</td>
+                        <td>${item.description || '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary" onclick="editItem(${item.id})">编辑</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteItem(${item.id})">删除</button>
+                        </td>
+                    </tr>
                 `).join('');
-            } catch (err) { console.error('加载物品失败:', err); }
+            } catch (err) {
+                console.error('加载物品失败:', err);
+            }
         }
 
+        // 加载怪物列表
         async function loadMonsters() {
             const search = document.getElementById('monster-search')?.value || '';
             try {
                 const res = await fetch(`${API_BASE}/monsters?search=${search}`);
                 const data = await res.json();
                 cache.monsters = data.data;
+                
                 const tbody = document.getElementById('monsters-table-body');
                 tbody.innerHTML = data.data.map(m => `
-                    <tr><td>${m.id}</td><td><strong>${m.name}</strong></td><td><span class="tag tag-orange">Lv.${m.level}</span></td><td>${m.hp}</td><td>${m.attack}</td><td>${m.defense}</td>
-                    <td><button class="btn btn-sm btn-secondary" onclick="editMonster(${m.id})">编辑</button><button class="btn btn-sm btn-danger" onclick="deleteMonster(${m.id})">删除</button></td></tr>
+                    <tr>
+                        <td>${m.id}</td>
+                        <td><strong>${m.name}</strong></td>
+                        <td><span class="tag tag-orange">Lv.${m.level}</span></td>
+                        <td>${m.hp}</td>
+                        <td>${m.attack}</td>
+                        <td>${m.defense}</td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary" onclick="editMonster(${m.id})">编辑</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteMonster(${m.id})">删除</button>
+                        </td>
+                    </tr>
                 `).join('');
-            } catch (err) { console.error('加载怪物失败:', err); }
+            } catch (err) {
+                console.error('加载怪物失败:', err);
+            }
         }
 
+        // 加载地图列表
         async function loadMaps() {
             const search = document.getElementById('map-search')?.value || '';
             try {
                 const res = await fetch(`${API_BASE}/maps?search=${search}`);
                 const data = await res.json();
                 cache.maps = data.data;
+                
                 const tbody = document.getElementById('maps-table-body');
                 tbody.innerHTML = data.data.map(m => `
-                    <tr><td>${m.id}</td><td><strong>${m.name}</strong></td><td>${m.description || '-'}</td><td>${m.route_description || '-'}</td>
-                    <td><button class="btn btn-sm btn-secondary" onclick="editMap(${m.id})">编辑</button><button class="btn btn-sm btn-danger" onclick="deleteMap(${m.id})">删除</button></td></tr>
+                    <tr>
+                        <td>${m.id}</td>
+                        <td><strong>${m.name}</strong></td>
+                        <td>${m.description || '-'}</td>
+                        <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis;">${m.route_description || '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary" onclick="editMap(${m.id})">编辑</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteMap(${m.id})">删除</button>
+                        </td>
+                    </tr>
                 `).join('');
-            } catch (err) { console.error('加载地图失败:', err); }
+            } catch (err) {
+                console.error('加载地图失败:', err);
+            }
         }
 
+        // 加载NPC列表
         async function loadNpcs() {
             const search = document.getElementById('npc-search')?.value || '';
             try {
                 const res = await fetch(`${API_BASE}/npcs?search=${search}`);
                 const data = await res.json();
                 cache.npcs = data.data;
+                
                 const tbody = document.getElementById('npcs-table-body');
                 tbody.innerHTML = data.data.map(n => `
-                    <tr><td>${n.id}</td><td><strong>${n.name}</strong></td><td>${n.map_name || '-'}</td><td>${n.position || '-'}</td><td>${n.function || '-'}</td>
-                    <td><button class="btn btn-sm btn-secondary" onclick="editNpc(${n.id})">编辑</button><button class="btn btn-sm btn-danger" onclick="deleteNpc(${n.id})">删除</button></td></tr>
+                    <tr>
+                        <td>${n.id}</td>
+                        <td><strong>${n.name}</strong></td>
+                        <td>${n.map_name || '-'}</td>
+                        <td>${n.position || '-'}</td>
+                        <td>${n.function || '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary" onclick="editNpc(${n.id})">编辑</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteNpc(${n.id})">删除</button>
+                        </td>
+                    </tr>
                 `).join('');
-            } catch (err) { console.error('加载 NPC 失败:', err); }
+            } catch (err) {
+                console.error('加载NPC失败:', err);
+            }
         }
 
+        // 加载物品出处
         async function loadSources() {
             try {
                 const res = await fetch(`${API_BASE}/item-sources`);
                 const data = await res.json();
+                
                 const tbody = document.getElementById('sources-table-body');
                 tbody.innerHTML = data.data.map(s => `
-                    <tr><td>${s.id}</td><td><strong>${s.item_name}</strong></td><td><span class="tag tag-orange">${s.monster_name}</span></td><td>${s.map_name || '-'}</td><td><span class="tag tag-green">${s.drop_rate || '未知'}</span></td><td>${s.notes || '-'}</td>
-                    <td><button class="btn btn-sm btn-danger" onclick="deleteSource(${s.id})">删除</button></td></tr>
+                    <tr>
+                        <td>${s.id}</td>
+                        <td><strong>${s.item_name}</strong></td>
+                        <td><span class="tag tag-orange">${s.monster_name}</span></td>
+                        <td>${s.map_name || '-'}</td>
+                        <td><span class="tag tag-green">${s.drop_rate || '未知'}</span></td>
+                        <td>${s.notes || '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-danger" onclick="deleteSource(${s.id})">删除</button>
+                        </td>
+                    </tr>
                 `).join('');
-            } catch (err) { console.error('加载出处失败:', err); }
+            } catch (err) {
+                console.error('加载出处失败:', err);
+            }
         }
 
+        // 加载怪物刷新
         async function loadSpawns() {
             try {
                 const res = await fetch(`${API_BASE}/monster-spawns`);
                 const data = await res.json();
+                
                 const tbody = document.getElementById('spawns-table-body');
                 tbody.innerHTML = data.data.map(s => `
-                    <tr><td>${s.id}</td><td><strong>${s.monster_name}</strong></td><td>${s.map_name}</td><td><code>${s.spawn_point || '-'}</code></td><td>${s.refresh_time ? s.refresh_time + '分钟' : '-'}</td><td>${s.notes || '-'}</td>
-                    <td><button class="btn btn-sm btn-danger" onclick="deleteSpawn(${s.id})">删除</button></td></tr>
+                    <tr>
+                        <td>${s.id}</td>
+                        <td><strong>${s.monster_name}</strong></td>
+                        <td>${s.map_name}</td>
+                        <td><code>${s.spawn_point || '-'}</code></td>
+                        <td>${s.refresh_time ? s.refresh_time + '分钟' : '-'}</td>
+                        <td>${s.notes || '-'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-danger" onclick="deleteSpawn(${s.id})">删除</button>
+                        </td>
+                    </tr>
                 `).join('');
-            } catch (err) { console.error('加载刷新点失败:', err); }
+            } catch (err) {
+                console.error('加载刷新点失败:', err);
+            }
         }
 
+        // 打开模态框
         function openModal(type, id = null) {
-            editingType = type; editingId = id;
+            editingType = type;
+            editingId = id;
             const modal = document.getElementById('modal');
             const title = document.getElementById('modal-title');
             const body = document.getElementById('modal-body');
-            const titles = { item: id ? '编辑物品' : '添加物品', monster: id ? '编辑怪物' : '添加怪物', map: id ? '编辑地图' : '添加地图', npc: id ? '编辑 NPC' : '添加 NPC', source: '添加物品出处', spawn: '添加怪物刷新点' };
+            
+            const titles = {
+                item: id ? '编辑物品' : '添加物品',
+                monster: id ? '编辑怪物' : '添加怪物',
+                map: id ? '编辑地图' : '添加地图',
+                npc: id ? '编辑NPC' : '添加NPC',
+                source: '添加物品出处',
+                spawn: '添加怪物刷新点'
+            };
+            
             title.textContent = titles[type];
+            
+            // 生成表单
             body.innerHTML = generateForm(type, id);
+            
             modal.classList.add('active');
         }
 
+        // 生成表单HTML
         function generateForm(type, id) {
             if (type === 'item') {
                 const item = id ? cache.items.find(i => i.id === id) : {};
-                return `<div class="form-group"><label class="form-label">物品名称 *</label><input type="text" class="form-input" id="form-name" value="${item.name || ''}" placeholder="如：裁决之杖"></div>
-                    <div class="form-row"><div class="form-group"><label class="form-label">类型</label><select class="form-select" id="form-type"><option value="">请选择</option><option value="weapon" ${item.type === 'weapon' ? 'selected' : ''}>武器</option><option value="armor" ${item.type === 'armor' ? 'selected' : ''}>防具</option><option value="helmet" ${item.type === 'helmet' ? 'selected' : ''}>头盔</option><option value="accessory" ${item.type === 'accessory' ? 'selected' : ''}>饰品</option><option value="consumable" ${item.type === 'consumable' ? 'selected' : ''}>消耗品</option></select></div>
-                    <div class="form-group"><label class="form-label">等级要求</label><input type="number" class="form-input" id="form-level" value="${item.level_requirement || ''}" placeholder="0"></div></div>
-                    <div class="form-group"><label class="form-label">描述</label><textarea class="form-textarea" id="form-description" placeholder="物品描述...">${item.description || ''}</textarea></div>`;
+                return `
+                    <div class="form-group">
+                        <label class="form-label">物品名称 *</label>
+                        <input type="text" class="form-input" id="form-name" value="${item.name || ''}" placeholder="如：裁决之杖">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">类型</label>
+                            <select class="form-select" id="form-type">
+                                <option value="">请选择</option>
+                                <option value="weapon" ${item.type === 'weapon' ? 'selected' : ''}>武器</option>
+                                <option value="armor" ${item.type === 'armor' ? 'selected' : ''}>防具</option>
+                                <option value="helmet" ${item.type === 'helmet' ? 'selected' : ''}>头盔</option>
+                                <option value="necklace" ${item.type === 'necklace' ? 'selected' : ''}>项链</option>
+                                <option value="ring" ${item.type === 'ring' ? 'selected' : ''}>戒指</option>
+                                <option value="bracelet" ${item.type === 'bracelet' ? 'selected' : ''}>手镯</option>
+                                <option value="shoes" ${item.type === 'shoes' ? 'selected' : ''}>鞋子</option>
+                                <option value="consumable" ${item.type === 'consumable' ? 'selected' : ''}>消耗品</option>
+                                <option value="material" ${item.type === 'material' ? 'selected' : ''}>材料</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">等级要求</label>
+                            <input type="number" class="form-input" id="form-level" value="${item.level_requirement || ''}" placeholder="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">描述</label>
+                        <textarea class="form-textarea" id="form-description" placeholder="物品描述、属性说明...">${item.description || ''}</textarea>
+                    </div>
+                `;
             }
+            
             if (type === 'monster') {
                 const m = id ? cache.monsters.find(i => i.id === id) : {};
-                return `<div class="form-group"><label class="form-label">怪物名称 *</label><input type="text" class="form-input" id="form-name" value="${m.name || ''}" placeholder="如：白野猪"></div>
-                    <div class="form-row"><div class="form-group"><label class="form-label">等级</label><input type="number" class="form-input" id="form-level" value="${m.level || ''}" placeholder="1"></div>
-                    <div class="form-group"><label class="form-label">血量</label><input type="number" class="form-input" id="form-hp" value="${m.hp || ''}" placeholder="100"></div></div>
-                    <div class="form-row"><div class="form-group"><label class="form-label">攻击</label><input type="number" class="form-input" id="form-attack" value="${m.attack || ''}" placeholder="10"></div>
-                    <div class="form-group"><label class="form-label">防御</label><input type="number" class="form-input" id="form-defense" value="${m.defense || ''}" placeholder="5"></div></div>
-                    <div class="form-group"><label class="form-label">描述</label><textarea class="form-textarea" id="form-description" placeholder="怪物描述...">${m.description || ''}</textarea></div>`;
+                return `
+                    <div class="form-group">
+                        <label class="form-label">怪物名称 *</label>
+                        <input type="text" class="form-input" id="form-name" value="${m.name || ''}" placeholder="如：白野猪">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">等级</label>
+                            <input type="number" class="form-input" id="form-level" value="${m.level || ''}" placeholder="1">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">血量</label>
+                            <input type="number" class="form-input" id="form-hp" value="${m.hp || ''}" placeholder="100">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">攻击</label>
+                            <input type="number" class="form-input" id="form-attack" value="${m.attack || ''}" placeholder="10">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">防御</label>
+                            <input type="number" class="form-input" id="form-defense" value="${m.defense || ''}" placeholder="5">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">描述</label>
+                        <textarea class="form-textarea" id="form-description" placeholder="怪物描述、技能说明...">${m.description || ''}</textarea>
+                    </div>
+                `;
             }
+            
             if (type === 'map') {
                 const m = id ? cache.maps.find(i => i.id === id) : {};
-                return `<div class="form-group"><label class="form-label">地图名称 *</label><input type="text" class="form-input" id="form-name" value="${m.name || ''}" placeholder="如：祖玛寺庙五层"></div>
-                    <div class="form-group"><label class="form-label">描述</label><input type="text" class="form-input" id="form-description" value="${m.description || ''}" placeholder="地图简介"></div>
-                    <div class="form-group"><label class="form-label">走法说明</label><textarea class="form-textarea" id="form-route" placeholder="如：上→上→左→右">${m.route_description || ''}</textarea></div>`;
+                return `
+                    <div class="form-group">
+                        <label class="form-label">地图名称 *</label>
+                        <input type="text" class="form-input" id="form-name" value="${m.name || ''}" placeholder="如：祖玛寺庙五层">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">描述</label>
+                        <input type="text" class="form-input" id="form-description" value="${m.description || ''}" placeholder="地图简介">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">走法说明 <span style="color: #a0aec0; font-weight: normal;">（从上一张地图如何走到这里）</span></label>
+                        <textarea class="form-textarea" id="form-route" placeholder="如：从祖玛四层(45,78)→上→上→左→右→下→祖玛五层">${m.route_description || ''}</textarea>
+                        <p class="form-hint">支持方向键：上、下、左、右，或坐标如 (125,80)</p>
+                    </div>
+                `;
             }
+            
             if (type === 'npc') {
                 const n = id ? cache.npcs.find(i => i.id === id) : {};
-                const mapOptions = cache.maps.map(m => `<option value="${m.id}" ${n.map_id === m.id ? 'selected' : ''}>${m.name}</option>`).join('');
-                return `<div class="form-group"><label class="form-label">NPC 名称 *</label><input type="text" class="form-input" id="form-name" value="${n.name || ''}" placeholder="如：武器店老板"></div>
-                    <div class="form-row"><div class="form-group"><label class="form-label">所在地图</label><select class="form-select" id="form-map"><option value="">请选择地图</option>${mapOptions}</select></div>
-                    <div class="form-group"><label class="form-label">坐标</label><input type="text" class="form-input" id="form-position" value="${n.position || ''}" placeholder="如：125,80"></div></div>
-                    <div class="form-group"><label class="form-label">功能描述</label><input type="text" class="form-input" id="form-function" value="${n.function || ''}" placeholder="如：出售武器"></div>
-                    <div class="form-group"><label class="form-label">对话内容</label><textarea class="form-textarea" id="form-dialogue" placeholder="NPC 对话...">${n.dialogue || ''}</textarea></div>`;
+                const mapOptions = cache.maps.map(m => 
+                    `<option value="${m.id}" ${n.map_id === m.id ? 'selected' : ''}>${m.name}</option>`
+                ).join('');
+                
+                return `
+                    <div class="form-group">
+                        <label class="form-label">NPC名称 *</label>
+                        <input type="text" class="form-input" id="form-name" value="${n.name || ''}" placeholder="如：武器店老板">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">所在地图</label>
+                            <select class="form-select" id="form-map">
+                                <option value="">请选择地图</option>
+                                ${mapOptions}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">坐标</label>
+                            <input type="text" class="form-input" id="form-position" value="${n.position || ''}" placeholder="如：125,80">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">功能描述</label>
+                        <input type="text" class="form-input" id="form-function" value="${n.function || ''}" placeholder="如：出售武器、修理装备">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">对话内容</label>
+                        <textarea class="form-textarea" id="form-dialogue" placeholder="NPC的默认对话...">${n.dialogue || ''}</textarea>
+                    </div>
+                `;
             }
+            
             if (type === 'source') {
                 const itemOptions = cache.items.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
                 const monsterOptions = cache.monsters.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
                 const mapOptions = cache.maps.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-                return `<div class="form-row"><div class="form-group"><label class="form-label">物品 *</label><select class="form-select" id="form-item"><option value="">请选择物品</option>${itemOptions}</select></div>
-                    <div class="form-group"><label class="form-label">掉落怪物 *</label><select class="form-select" id="form-monster"><option value="">请选择怪物</option>${monsterOptions}</select></div></div>
-                    <div class="form-row"><div class="form-group"><label class="form-label">地图</label><select class="form-select" id="form-map"><option value="">请选择地图</option>${mapOptions}</select></div>
-                    <div class="form-group"><label class="form-label">爆率</label><input type="text" class="form-input" id="form-rate" placeholder="如：1/50"></div></div>
-                    <div class="form-group"><label class="form-label">备注</label><input type="text" class="form-input" id="form-notes" placeholder="额外说明..."></div></div>`;
+                
+                return `
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">物品 *</label>
+                            <select class="form-select" id="form-item">
+                                <option value="">请选择物品</option>
+                                ${itemOptions}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">掉落怪物 *</label>
+                            <select class="form-select" id="form-monster">
+                                <option value="">请选择怪物</option>
+                                ${monsterOptions}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">地图（可选）</label>
+                            <select class="form-select" id="form-map">
+                                <option value="">请选择地图</option>
+                                ${mapOptions}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">爆率</label>
+                            <input type="text" class="form-input" id="form-rate" placeholder="如：1/50, 必掉">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">备注</label>
+                        <input type="text" class="form-input" id="form-notes" placeholder="额外说明...">
+                    </div>
+                `;
             }
+            
             if (type === 'spawn') {
                 const monsterOptions = cache.monsters.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
                 const mapOptions = cache.maps.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-                return `<div class="form-row"><div class="form-group"><label class="form-label">怪物 *</label><select class="form-select" id="form-monster"><option value="">请选择怪物</option>${monsterOptions}</select></div>
-                    <div class="form-group"><label class="form-label">地图 *</label><select class="form-select" id="form-map"><option value="">请选择地图</option>${mapOptions}</select></div></div>
-                    <div class="form-row"><div class="form-group"><label class="form-label">刷新坐标</label><input type="text" class="form-input" id="form-point" placeholder="如：125,80"></div>
-                    <div class="form-group"><label class="form-label">刷新时间（分钟）</label><input type="number" class="form-input" id="form-time" placeholder="30"></div></div>
-                    <div class="form-group"><label class="form-label">备注</label><input type="text" class="form-input" id="form-notes" placeholder="备注..."></div></div>`;
+                
+                return `
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">怪物 *</label>
+                            <select class="form-select" id="form-monster">
+                                <option value="">请选择怪物</option>
+                                ${monsterOptions}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">地图 *</label>
+                            <select class="form-select" id="form-map">
+                                <option value="">请选择地图</option>
+                                ${mapOptions}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">刷新坐标</label>
+                            <input type="text" class="form-input" id="form-point" placeholder="如：125,80 或 随机">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">刷新时间（分钟）</label>
+                            <input type="number" class="form-input" id="form-time" placeholder="如：30">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">备注</label>
+                        <input type="text" class="form-input" id="form-notes" placeholder="如：BOSS点、精英怪...">
+                    </div>
+                `;
             }
         }
 
+        // 关闭模态框
         function closeModal() {
             document.getElementById('modal').classList.remove('active');
-            editingId = null; editingType = null;
+            editingId = null;
+            editingType = null;
         }
 
+        // 提交表单
         async function submitForm() {
-            const type = editingType, id = editingId;
-            let data = {}, url = `${API_BASE}/${type}s`, method = id ? 'PUT' : 'POST';
+            const type = editingType;
+            const id = editingId;
+            
+            let data = {};
+            let url = `${API_BASE}/${type}s`;
+            let method = id ? 'PUT' : 'POST';
+            
             if (id) url = `${API_BASE}/${type}s/${id}`;
-            if (type === 'item') data = { name: document.getElementById('form-name').value, type: document.getElementById('form-type').value, level_requirement: document.getElementById('form-level').value, description: document.getElementById('form-description').value };
-            else if (type === 'monster') data = { name: document.getElementById('form-name').value, level: document.getElementById('form-level').value, hp: document.getElementById('form-hp').value, attack: document.getElementById('form-attack').value, defense: document.getElementById('form-defense').value, description: document.getElementById('form-description').value };
-            else if (type === 'map') data = { name: document.getElementById('form-name').value, description: document.getElementById('form-description').value, route_description: document.getElementById('form-route').value };
-            else if (type === 'npc') data = { name: document.getElementById('form-name').value, map_id: document.getElementById('form-map').value, position: document.getElementById('form-position').value, function: document.getElementById('form-function').value, dialogue: document.getElementById('form-dialogue').value };
-            else if (type === 'source') { url = `${API_BASE}/item-sources`; data = { item_id: document.getElementById('form-item').value, monster_id: document.getElementById('form-monster').value, map_id: document.getElementById('form-map').value, drop_rate: document.getElementById('form-rate').value, notes: document.getElementById('form-notes').value }; }
-            else if (type === 'spawn') { url = `${API_BASE}/monster-spawns`; data = { monster_id: document.getElementById('form-monster').value, map_id: document.getElementById('form-map').value, spawn_point: document.getElementById('form-point').value, refresh_time: document.getElementById('form-time').value, notes: document.getElementById('form-notes').value }; }
+            
+            // 收集表单数据
+            if (type === 'item') {
+                data = {
+                    name: document.getElementById('form-name').value,
+                    type: document.getElementById('form-type').value,
+                    level_requirement: document.getElementById('form-level').value,
+                    description: document.getElementById('form-description').value
+                };
+            } else if (type === 'monster') {
+                data = {
+                    name: document.getElementById('form-name').value,
+                    level: document.getElementById('form-level').value,
+                    hp: document.getElementById('form-hp').value,
+                    attack: document.getElementById('form-attack').value,
+                    defense: document.getElementById('form-defense').value,
+                    description: document.getElementById('form-description').value
+                };
+            } else if (type === 'map') {
+                data = {
+                    name: document.getElementById('form-name').value,
+                    description: document.getElementById('form-description').value,
+                    route_description: document.getElementById('form-route').value
+                };
+            } else if (type === 'npc') {
+                data = {
+                    name: document.getElementById('form-name').value,
+                    map_id: document.getElementById('form-map').value,
+                    position: document.getElementById('form-position').value,
+                    function: document.getElementById('form-function').value,
+                    dialogue: document.getElementById('form-dialogue').value
+                };
+            } else if (type === 'source') {
+                url = `${API_BASE}/item-sources`;
+                method = 'POST';
+                data = {
+                    item_id: document.getElementById('form-item').value,
+                    monster_id: document.getElementById('form-monster').value,
+                    map_id: document.getElementById('form-map').value,
+                    drop_rate: document.getElementById('form-rate').value,
+                    notes: document.getElementById('form-notes').value
+                };
+            } else if (type === 'spawn') {
+                url = `${API_BASE}/monster-spawns`;
+                method = 'POST';
+                data = {
+                    monster_id: document.getElementById('form-monster').value,
+                    map_id: document.getElementById('form-map').value,
+                    spawn_point: document.getElementById('form-point').value,
+                    refresh_time: document.getElementById('form-time').value,
+                    notes: document.getElementById('form-notes').value
+                };
+            }
+            
+            // 验证必填
+            if (!data.name && type !== 'source' && type !== 'spawn') {
+                showToast('请填写名称', 'error');
+                return;
+            }
+            if (type === 'source' && (!data.item_id || !data.monster_id)) {
+                showToast('请选择物品和怪物', 'error');
+                return;
+            }
+            if (type === 'spawn' && (!data.monster_id || !data.map_id)) {
+                showToast('请选择怪物和地图', 'error');
+                return;
+            }
+            
             try {
-                const res = await fetch(url, { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
+                const res = await fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
                 const result = await res.json();
-                if (res.ok) { showToast(id ? '更新成功' : '创建成功', 'success'); closeModal(); if (type === 'item') loadItems(); else if (type === 'monster') loadMonsters(); else if (type === 'map') loadMaps(); else if (type === 'npc') loadNpcs(); else if (type === 'source') loadSources(); else if (type === 'spawn') loadSpawns(); loadStats(); }
-                else showToast(result.error || '操作失败', 'error');
-            } catch (err) { showToast('网络错误', 'error'); console.error(err); }
+                
+                if (res.ok) {
+                    showToast(id ? '更新成功' : '创建成功', 'success');
+                    closeModal();
+                    // 刷新当前页面数据
+                    if (type === 'item') loadItems();
+                    if (type === 'monster') loadMonsters();
+                    if (type === 'map') loadMaps();
+                    if (type === 'npc') loadNpcs();
+                    if (type === 'source') loadSources();
+                    if (type === 'spawn') loadSpawns();
+                    loadStats();
+                } else {
+                    showToast(result.error || '操作失败', 'error');
+                }
+            } catch (err) {
+                showToast('网络错误', 'error');
+                console.error(err);
+            }
         }
 
-        async function deleteItem(id) { if (!confirm('确定删除吗？')) return; await fetch(`${API_BASE}/items/${id}`, { method: 'DELETE' }); loadItems(); loadStats(); showToast('删除成功', 'success'); }
-        async function deleteMonster(id) { if (!confirm('确定删除吗？')) return; await fetch(`${API_BASE}/monsters/${id}`, { method: 'DELETE' }); loadMonsters(); loadStats(); showToast('删除成功', 'success'); }
-        async function deleteMap(id) { if (!confirm('确定删除吗？')) return; await fetch(`${API_BASE}/maps/${id}`, { method: 'DELETE' }); loadMaps(); loadStats(); showToast('删除成功', 'success'); }
-        async function deleteNpc(id) { if (!confirm('确定删除吗？')) return; await fetch(`${API_BASE}/npcs/${id}`, { method: 'DELETE' }); loadNpcs(); loadStats(); showToast('删除成功', 'success'); }
-        async function deleteSource(id) { if (!confirm('确定删除吗？')) return; await fetch(`${API_BASE}/item-sources/${id}`, { method: 'DELETE' }); loadSources(); showToast('删除成功', 'success'); }
-        async function deleteSpawn(id) { if (!confirm('确定删除吗？')) return; await fetch(`${API_BASE}/monster-spawns/${id}`, { method: 'DELETE' }); loadSpawns(); showToast('删除成功', 'success'); }
+        // 删除操作
+        async function deleteItem(id) {
+            if (!confirm('确定删除这个物品吗？')) return;
+            await fetch(`${API_BASE}/items/${id}`, { method: 'DELETE' });
+            loadItems();
+            loadStats();
+            showToast('删除成功', 'success');
+        }
 
+        async function deleteMonster(id) {
+            if (!confirm('确定删除这个怪物吗？')) return;
+            await fetch(`${API_BASE}/monsters/${id}`, { method: 'DELETE' });
+            loadMonsters();
+            loadStats();
+            showToast('删除成功', 'success');
+        }
+
+        async function deleteMap(id) {
+            if (!confirm('确定删除这个地图吗？相关关联数据也会被删除。')) return;
+            await fetch(`${API_BASE}/maps/${id}`, { method: 'DELETE' });
+            loadMaps();
+            loadStats();
+            showToast('删除成功', 'success');
+        }
+
+        async function deleteNpc(id) {
+            if (!confirm('确定删除这个NPC吗？')) return;
+            await fetch(`${API_BASE}/npcs/${id}`, { method: 'DELETE' });
+            loadNpcs();
+            loadStats();
+            showToast('删除成功', 'success');
+        }
+
+        async function deleteSource(id) {
+            if (!confirm('确定删除这个出处关联吗？')) return;
+            await fetch(`${API_BASE}/item-sources/${id}`, { method: 'DELETE' });
+            loadSources();
+            showToast('删除成功', 'success');
+        }
+
+        async function deleteSpawn(id) {
+            if (!confirm('确定删除这个刷新点吗？')) return;
+            await fetch(`${API_BASE}/monster-spawns/${id}`, { method: 'DELETE' });
+            loadSpawns();
+            showToast('删除成功', 'success');
+        }
+
+        // 编辑操作
         function editItem(id) { openModal('item', id); }
         function editMonster(id) { openModal('monster', id); }
         function editMap(id) { openModal('map', id); }
         function editNpc(id) { openModal('npc', id); }
 
+        // Toast 提示
         function showToast(message, type = 'success') {
             const toast = document.getElementById('toast');
             const icon = document.getElementById('toast-icon');
             const msg = document.getElementById('toast-message');
+            
             toast.className = `toast ${type}`;
             icon.textContent = type === 'success' ? '✅' : '❌';
             msg.textContent = message;
+            
             toast.classList.add('show');
             setTimeout(() => toast.classList.remove('show'), 3000);
         }
 
-        document.getElementById('modal').addEventListener('click', function(e) { if (e.target === this) closeModal(); });
+        // 点击遮罩关闭
+        document.getElementById('modal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
     </script>
 </body>
-</html>
+</html>'''
+
+print("✅ 后台管理界面代码已生成")
+print(f"📄 代码长度: {len(admin_html)} 字符")
+print("\n💡 文件结构：")
+print("📁 project/")
+print("  ├── server.js          ← 后端API（上面的代码）")
+print("  ├── package.json       ← 依赖配置")
+print("  └── public/")
+print("      ├── index.html     ← 前台查询网站（之前提供的）")
+print("      └── admin.html     ← 后台管理界面（这个文件）")

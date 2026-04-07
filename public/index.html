@@ -1,16 +1,24 @@
-<!DOCTYPE html>
+
+frontend_html = '''<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>大展宏图 - 游戏查询系统</title>
+    <title>猴子游戏 - 游戏查询系统</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
             background: linear-gradient(135deg, #e0e7ff 0%, #d1e0ff 100%);
             min-height: 100vh;
         }
+
+        /* Header */
         .header {
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
@@ -23,226 +31,559 @@
             top: 0;
             z-index: 100;
         }
-        .logo-section { display: flex; align-items: center; gap: 12px; }
+
+        .logo-section {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .logo {
-            width: 45px; height: 45px;
+            width: 45px;
+            height: 45px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border-radius: 12px;
-            display: flex; align-items: center; justify-content: center;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             font-size: 24px;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
-        .logo-text h1 { font-size: 20px; color: #2d3748; font-weight: 700; }
-        .logo-text span { font-size: 12px; color: #718096; }
+
+        .logo-text h1 {
+            font-size: 20px;
+            color: #2d3748;
+            font-weight: 700;
+        }
+
+        .logo-text span {
+            font-size: 12px;
+            color: #718096;
+        }
+
+        /* Navigation */
         .nav-tabs {
-            display: flex; gap: 8px;
+            display: flex;
+            gap: 8px;
             background: rgba(237, 242, 247, 0.8);
-            padding: 6px; border-radius: 12px;
+            padding: 6px;
+            border-radius: 12px;
         }
+
         .nav-tab {
-            padding: 10px 20px; border: none; background: transparent;
-            color: #4a5568; font-size: 14px; font-weight: 500;
-            cursor: pointer; border-radius: 8px; transition: all 0.3s ease;
+            padding: 10px 20px;
+            border: none;
+            background: transparent;
+            color: #4a5568;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            white-space: nowrap;
         }
-        .nav-tab:hover { background: rgba(255,255,255,0.5); }
+
+        .nav-tab:hover {
+            background: rgba(255,255,255,0.5);
+        }
+
         .nav-tab.active {
-            background: #4299e1; color: white;
+            background: #4299e1;
+            color: white;
             box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
         }
-        .header-right { display: flex; align-items: center; gap: 12px; }
-        .version-select {
-            padding: 8px 12px; border: 1px solid #e2e8f0;
-            border-radius: 8px; background: white;
-            color: #4a5568; font-size: 13px; cursor: pointer;
+
+        /* Header Right */
+        .header-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
         }
+
         .admin-link {
-            padding: 8px 16px; background: #667eea; color: white;
-            border: none; border-radius: 8px; font-size: 13px;
-            cursor: pointer; text-decoration: none; transition: all 0.3s;
+            padding: 8px 16px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 13px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s;
         }
-        .admin-link:hover { background: #5a67d8; transform: translateY(-1px); }
+
+        .admin-link:hover {
+            background: #5a67d8;
+            transform: translateY(-1px);
+        }
+
+        /* Mobile Menu Toggle */
         .menu-toggle {
-            display: none; background: none; border: none;
-            font-size: 24px; color: #4a5568; cursor: pointer;
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            color: #4a5568;
+            cursor: pointer;
         }
-        .main-container { padding: 20px; max-width: 1600px; margin: 0 auto; }
-        .content-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+
+        /* Main Content */
+        .main-container {
+            padding: 20px;
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+        }
+
+        /* Panel Styles */
         .panel {
             background: rgba(255, 255, 255, 0.95);
             border-radius: 16px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.05);
-            overflow: hidden; display: flex; flex-direction: column;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
             height: calc(100vh - 140px);
             transition: transform 0.3s, box-shadow 0.3s;
         }
-        .panel:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+
+        .panel:hover {
+            box-shadow: 0 8px 30px rgba(0,0,0,0.1);
+        }
+
         .panel-header {
-            padding: 16px 20px; border-bottom: 1px solid #e2e8f0;
-            display: flex; align-items: center; justify-content: space-between;
+            padding: 16px 20px;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
             background: linear-gradient(to right, rgba(66, 153, 225, 0.05), transparent);
         }
+
         .panel-title {
-            display: flex; align-items: center; gap: 10px;
-            font-size: 15px; font-weight: 600; color: #2d3748;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            color: #2d3748;
         }
+
         .panel-icon {
-            width: 28px; height: 28px;
+            width: 28px;
+            height: 28px;
             background: linear-gradient(135deg, #4299e1, #667eea);
             border-radius: 8px;
-            display: flex; align-items: center; justify-content: center;
-            color: white; font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 14px;
         }
-        .panel-stats { display: flex; gap: 8px; align-items: center; }
+
+        .panel-stats {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
         .stat-badge {
-            font-size: 11px; padding: 4px 10px;
-            border-radius: 20px; font-weight: 500;
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-weight: 500;
         }
-        .stat-badge.green { background: #c6f6d5; color: #22543d; }
-        .stat-badge.blue { background: #bee3f8; color: #2a4365; }
-        .panel-search { padding: 12px 16px; border-bottom: 1px solid #e2e8f0; }
+
+        .stat-badge.green {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .stat-badge.blue {
+            background: #bee3f8;
+            color: #2a4365;
+        }
+
+        .panel-search {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
         .search-input {
-            width: 100%; padding: 10px 14px; border: 1px solid #e2e8f0;
-            border-radius: 10px; font-size: 13px; outline: none;
-            transition: all 0.3s; background: #f7fafc;
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 13px;
+            outline: none;
+            transition: all 0.3s;
+            background: #f7fafc;
         }
+
         .search-input:focus {
-            border-color: #4299e1; background: white;
+            border-color: #4299e1;
+            background: white;
             box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
         }
-        .panel-content { flex: 1; overflow-y: auto; padding: 8px; }
-        .panel-content::-webkit-scrollbar { width: 6px; }
-        .panel-content::-webkit-scrollbar-track { background: transparent; }
-        .panel-content::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 3px; }
-        .list-item {
-            display: flex; align-items: center; padding: 12px 14px;
-            margin: 4px 0; border-radius: 10px; cursor: pointer;
-            transition: all 0.2s; gap: 12px;
+
+        .panel-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px;
         }
-        .list-item:hover { background: #ebf8ff; transform: translateX(4px); }
+
+        .panel-content::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .panel-content::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .panel-content::-webkit-scrollbar-thumb {
+            background: #cbd5e0;
+            border-radius: 3px;
+        }
+
+        /* List Items */
+        .list-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 14px;
+            margin: 4px 0;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            gap: 12px;
+        }
+
+        .list-item:hover {
+            background: #ebf8ff;
+            transform: translateX(4px);
+        }
+
         .list-item.active {
             background: linear-gradient(135deg, #4299e1, #667eea);
-            color: white; box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
+            color: white;
+            box-shadow: 0 4px 12px rgba(66, 153, 225, 0.3);
         }
+
         .item-number {
-            width: 26px; height: 26px; background: #e2e8f0;
-            border-radius: 50%; display: flex; align-items: center;
-            justify-content: center; font-size: 12px; font-weight: 600;
-            color: #4a5568; flex-shrink: 0;
+            width: 26px;
+            height: 26px;
+            background: #e2e8f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+            color: #4a5568;
+            flex-shrink: 0;
         }
+
         .list-item.active .item-number {
-            background: rgba(255,255,255,0.3); color: white;
+            background: rgba(255,255,255,0.3);
+            color: white;
         }
-        .item-name { font-size: 14px; font-weight: 500; }
-        .item-meta { font-size: 12px; color: #718096; margin-top: 2px; }
-        .list-item.active .item-meta { color: rgba(255,255,255,0.8); }
+
+        .item-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .item-meta {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 2px;
+        }
+
+        .list-item.active .item-meta {
+            color: rgba(255,255,255,0.8);
+        }
+
+        /* Empty State */
         .empty-state {
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center; height: 100%; color: #a0aec0;
-            text-align: center; padding: 40px 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #a0aec0;
+            text-align: center;
+            padding: 40px 20px;
         }
+
         .empty-icon {
-            width: 60px; height: 60px; background: #e2e8f0;
-            border-radius: 50%; display: flex; align-items: center;
-            justify-content: center; font-size: 28px; margin-bottom: 16px;
+            width: 60px;
+            height: 60px;
+            background: #e2e8f0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 16px;
             color: #718096;
         }
+
+        /* Info Cards */
         .info-card {
-            padding: 16px; margin: 8px; background: #f7fafc;
-            border-radius: 12px; border-left: 4px solid #4299e1;
+            padding: 16px;
+            margin: 8px;
+            background: #f7fafc;
+            border-radius: 12px;
+            border-left: 4px solid #4299e1;
         }
-        .info-card h4 { color: #2d3748; margin-bottom: 8px; font-size: 14px; }
-        .info-card p { color: #4a5568; font-size: 13px; line-height: 1.6; }
+
+        .info-card h4 {
+            color: #2d3748;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .info-card p {
+            color: #4a5568;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
         .info-row {
-            display: flex; justify-content: space-between;
-            padding: 10px 0; border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e2e8f0;
             font-size: 13px;
         }
-        .info-row:last-child { border-bottom: none; }
-        .info-label { color: #718096; }
-        .info-value { color: #2d3748; font-weight: 500; }
+
+        .info-row:last-child {
+            border-bottom: none;
+        }
+
+        .info-label {
+            color: #718096;
+        }
+
+        .info-value {
+            color: #2d3748;
+            font-weight: 500;
+        }
+
+        /* Route Display */
         .route-box {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white; padding: 20px; border-radius: 12px;
-            margin: 12px; font-family: 'Courier New', monospace;
-            font-size: 14px; line-height: 1.8; white-space: pre-wrap;
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            margin: 12px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.8;
+            white-space: pre-wrap;
+            word-break: break-all;
         }
+
         .route-box .direction {
-            display: inline-block; padding: 2px 8px;
-            background: rgba(255,255,255,0.2); border-radius: 4px; margin: 0 2px;
+            display: inline-block;
+            padding: 2px 8px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 4px;
+            margin: 0 2px;
         }
+
+        /* Source List */
         .source-item {
-            padding: 14px; margin: 8px; background: white;
-            border-radius: 10px; border: 1px solid #e2e8f0;
+            padding: 14px;
+            margin: 8px;
+            background: white;
+            border-radius: 10px;
+            border: 1px solid #e2e8f0;
             transition: all 0.3s;
         }
+
         .source-item:hover {
             border-color: #4299e1;
             box-shadow: 0 4px 12px rgba(66, 153, 225, 0.1);
         }
+
         .source-header {
-            display: flex; justify-content: space-between;
-            align-items: center; margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
         }
-        .source-monster { font-weight: 600; color: #2d3748; }
+
+        .source-monster {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
         .source-rate {
-            font-size: 12px; padding: 4px 10px;
-            background: #c6f6d5; color: #22543d;
-            border-radius: 20px; font-weight: 500;
+            font-size: 12px;
+            padding: 4px 10px;
+            background: #c6f6d5;
+            color: #22543d;
+            border-radius: 20px;
+            font-weight: 500;
         }
-        .source-map { font-size: 13px; color: #718096; }
+
+        .source-map {
+            font-size: 13px;
+            color: #718096;
+        }
+
+        /* Footer */
         .footer {
-            text-align: center; padding: 20px;
-            color: #718096; font-size: 13px;
+            text-align: center;
+            padding: 20px;
+            color: #718096;
+            font-size: 13px;
         }
-        .footer a { color: #4299e1; text-decoration: none; }
+
+        .footer a {
+            color: #4299e1;
+            text-decoration: none;
+        }
+
+        /* Mobile Navigation Overlay */
         .mobile-nav-overlay {
-            display: none; position: fixed; top: 0; left: 0;
-            right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 99;
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 99;
         }
-        .mobile-nav-overlay.active { display: block; }
+
+        .mobile-nav-overlay.active {
+            display: block;
+        }
+
+        /* Loading */
         .loading-state {
-            display: flex; flex-direction: column; align-items: center;
-            justify-content: center; height: 100%; color: #a0aec0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            color: #a0aec0;
         }
+
         .spinner {
-            width: 40px; height: 40px; border: 3px solid #e2e8f0;
-            border-top-color: #4299e1; border-radius: 50%;
-            animation: spin 1s linear infinite; margin-bottom: 12px;
+            width: 40px;
+            height: 40px;
+            border: 3px solid #e2e8f0;
+            border-top-color: #4299e1;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 12px;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive Design */
         @media (max-width: 1200px) {
-            .content-grid { grid-template-columns: repeat(2, 1fr); }
-            .panel { height: 400px; }
+            .content-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .panel {
+                height: 400px;
+            }
         }
+
         @media (max-width: 768px) {
-            .header { flex-wrap: wrap; gap: 12px; }
+            .header {
+                flex-wrap: wrap;
+                gap: 12px;
+            }
+
             .nav-tabs {
-                display: none; position: absolute; top: 70px;
-                left: 20px; right: 20px; flex-direction: column;
-                background: white; box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+                display: none;
+                position: absolute;
+                top: 70px;
+                left: 20px;
+                right: 20px;
+                flex-direction: column;
+                background: white;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.1);
                 z-index: 100;
             }
-            .nav-tabs.mobile-open { display: flex; }
-            .nav-tab { text-align: left; padding: 14px 20px; }
-            .menu-toggle { display: block; }
-            .content-grid { grid-template-columns: 1fr; }
-            .panel { height: auto; min-height: 300px; }
-            .logo-text h1 { font-size: 16px; }
-            .header-right { gap: 8px; }
-            .version-select { font-size: 12px; padding: 6px 10px; }
-            .admin-link { padding: 6px 12px; font-size: 12px; }
+
+            .nav-tabs.mobile-open {
+                display: flex;
+            }
+
+            .nav-tab {
+                text-align: left;
+                padding: 14px 20px;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .panel {
+                height: auto;
+                min-height: 300px;
+            }
+
+            .logo-text h1 {
+                font-size: 16px;
+            }
+
+            .header-right {
+                gap: 8px;
+            }
+
+            .admin-link {
+                padding: 6px 12px;
+                font-size: 12px;
+            }
         }
+
+        /* Animation */
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .panel { animation: fadeIn 0.4s ease-out; }
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-        .type-badge {
-            display: inline-block; padding: 2px 8px;
-            border-radius: 4px; font-size: 11px; font-weight: 500; margin-left: 8px;
+
+        .panel {
+            animation: fadeIn 0.4s ease-out;
         }
+
+        /* Tab Content Visibility */
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Type Badge */
+        .type-badge {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+
         .type-weapon { background: #fed7d7; color: #c53030; }
         .type-armor { background: #c6f6d5; color: #22543d; }
         .type-helmet { background: #bee3f8; color: #2b6cb0; }
@@ -255,36 +596,38 @@
         <div class="logo-section">
             <div class="logo">🐌</div>
             <div class="logo-text">
-                <h1>查询系统</h1>
-                <span>大展宏图</span>
+                <h1>小猴子游戏</h1>
+                <span>查询系统</span>
             </div>
         </div>
+
         <button class="menu-toggle" onclick="toggleMobileMenu()">☰</button>
+
         <nav class="nav-tabs" id="navTabs">
             <button class="nav-tab active" onclick="switchTab('items')">物品查询</button>
             <button class="nav-tab" onclick="switchTab('monsters')">怪物查询</button>
             <button class="nav-tab" onclick="switchTab('maps')">地图查询</button>
-            <button class="nav-tab" onclick="switchTab('npcs')">NPC 查询</button>
+            <button class="nav-tab" onclick="switchTab('npcs')">NPC查询</button>
             <button class="nav-tab" onclick="switchTab('guides')">查看攻略</button>
         </nav>
+
         <div class="header-right">
-            <select class="version-select">
-                <option>切换版本：永恒复古</option>
-                <option>经典版本</option>
-                <option>怀旧版本</option>
-            </select>
             <a href="/admin.html" class="admin-link">⚙️ 管理</a>
         </div>
     </header>
+
     <div class="mobile-nav-overlay" id="mobileOverlay" onclick="toggleMobileMenu()"></div>
+
     <main class="main-container">
+        <!-- 物品查询 -->
         <div id="items-tab" class="tab-content active">
             <div class="content-grid">
+                <!-- 物品列表 -->
                 <div class="panel">
                     <div class="panel-header">
                         <div class="panel-title">
                             <div class="panel-icon">📋</div>
-物品列表
+                            物品列表
                         </div>
                         <div class="panel-stats">
                             <span class="stat-badge green" id="item-count">加载中...</span>
@@ -294,54 +637,74 @@
                         <input type="text" class="search-input" placeholder="请输入物品名过滤" id="itemSearch" oninput="filterItems()">
                     </div>
                     <div class="panel-content" id="itemList">
-                        <div class="loading-state"><div class="spinner"></div><p>加载中...</p></div>
+                        <div class="loading-state">
+                            <div class="spinner"></div>
+                            <p>加载中...</p>
+                        </div>
                     </div>
                 </div>
+
+                <!-- 物品出处 -->
                 <div class="panel">
                     <div class="panel-header">
                         <div class="panel-title">
                             <div class="panel-icon">📍</div>
-物品出处
+                            物品出处
                         </div>
                         <div class="panel-stats">
                             <span class="stat-badge blue" id="source-count">--</span>
                         </div>
                     </div>
                     <div class="panel-content" id="itemSource">
-                        <div class="empty-state"><div class="empty-icon">ℹ️</div><p>请从左边选择物品查询</p></div>
+                        <div class="empty-state">
+                            <div class="empty-icon">ℹ️</div>
+                            <p>请从左边选择物品查询</p>
+                        </div>
                     </div>
                 </div>
+
+                <!-- 刷新地图 -->
                 <div class="panel">
                     <div class="panel-header">
                         <div class="panel-title">
                             <div class="panel-icon">🗺️</div>
-刷新地图
+                            刷新地图
                         </div>
                     </div>
                     <div class="panel-content" id="refreshMap">
-                        <div class="empty-state"><div class="empty-icon">ℹ️</div><p>选择怪物查看刷新地图</p></div>
+                        <div class="empty-state">
+                            <div class="empty-icon">ℹ️</div>
+                            <p>选择怪物查看刷新地图</p>
+                        </div>
                     </div>
                 </div>
+
+                <!-- 地图走法 -->
                 <div class="panel">
                     <div class="panel-header">
                         <div class="panel-title">
                             <div class="panel-icon">🧭</div>
-地图走法
+                            地图走法
                         </div>
                     </div>
                     <div class="panel-content" id="mapRoute">
-                        <div class="empty-state"><div class="empty-icon">ℹ️</div><p>选择地图查看走法</p></div>
+                        <div class="empty-state">
+                            <div class="empty-icon">ℹ️</div>
+                            <p>选择地图查看走法</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- 怪物查询 -->
         <div id="monsters-tab" class="tab-content">
             <div class="content-grid">
                 <div class="panel">
                     <div class="panel-header">
                         <div class="panel-title">
                             <div class="panel-icon">👹</div>
-怪物列表
+                            怪物列表
                         </div>
                         <div class="panel-stats">
                             <span class="stat-badge green" id="monster-count">加载中...</span>
@@ -351,51 +714,68 @@
                         <input type="text" class="search-input" placeholder="请输入怪物名过滤" id="monsterSearch" oninput="filterMonsters()">
                     </div>
                     <div class="panel-content" id="monsterList">
-                        <div class="loading-state"><div class="spinner"></div><p>加载中...</p></div>
+                        <div class="loading-state">
+                            <div class="spinner"></div>
+                            <p>加载中...</p>
+                        </div>
                     </div>
                 </div>
+
                 <div class="panel">
                     <div class="panel-header">
                         <div class="panel-title">
                             <div class="panel-icon">📊</div>
-怪物信息
+                            怪物信息
                         </div>
                     </div>
                     <div class="panel-content" id="monsterInfo">
-                        <div class="empty-state"><div class="empty-icon">ℹ️</div><p>请从左边选择怪物查看详情</p></div>
+                        <div class="empty-state">
+                            <div class="empty-icon">ℹ️</div>
+                            <p>请从左边选择怪物查看详情</p>
+                        </div>
                     </div>
                 </div>
+
                 <div class="panel">
                     <div class="panel-header">
                         <div class="panel-title">
                             <div class="panel-icon">🗺️</div>
-刷新地图
+                            刷新地图
                         </div>
                     </div>
                     <div class="panel-content" id="monsterSpawns">
-                        <div class="empty-state"><div class="empty-icon">ℹ️</div><p>请先选择怪物</p></div>
+                        <div class="empty-state">
+                            <div class="empty-icon">ℹ️</div>
+                            <p>请先选择怪物</p>
+                        </div>
                     </div>
                 </div>
+
                 <div class="panel">
                     <div class="panel-header">
                         <div class="panel-title">
                             <div class="panel-icon">🧭</div>
-地图走法
+                            地图走法
                         </div>
                     </div>
                     <div class="panel-content" id="monsterRoute">
-                        <div class="empty-state"><div class="empty-icon">ℹ️</div><p>选择地图查看走法</p></div>
+                        <div class="empty-state">
+                            <div class="empty-icon">ℹ️</div>
+                            <p>选择地图查看走法</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- 地图查询 -->
         <div id="maps-tab" class="tab-content">
             <div class="content-grid" style="grid-template-columns: 1fr 2fr;">
                 <div class="panel">
                     <div class="panel-header">
                         <div class="panel-title">
                             <div class="panel-icon">🗺️</div>
-地图列表
+                            地图列表
                         </div>
                         <div class="panel-stats">
                             <span class="stat-badge green" id="map-count">加载中...</span>
@@ -405,82 +785,101 @@
                         <input type="text" class="search-input" placeholder="请输入地图名过滤" id="mapSearch" oninput="filterMaps()">
                     </div>
                     <div class="panel-content" id="mapList">
-                        <div class="loading-state"><div class="spinner"></div><p>加载中...</p></div>
+                        <div class="loading-state">
+                            <div class="spinner"></div>
+                            <p>加载中...</p>
+                        </div>
                     </div>
                 </div>
+
                 <div class="panel">
                     <div class="panel-header">
                         <div class="panel-title">
                             <div class="panel-icon">📍</div>
-地图详情
+                            地图详情
                         </div>
                     </div>
                     <div class="panel-content" id="mapDetail">
-                        <div class="empty-state"><div class="empty-icon">ℹ️</div><p>请从左边选择地图查看详情</p></div>
+                        <div class="empty-state">
+                            <div class="empty-icon">ℹ️</div>
+                            <p>请从左边选择地图查看详情</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- NPC查询 -->
         <div id="npcs-tab" class="tab-content">
             <div class="content-grid" style="grid-template-columns: 1fr 2fr;">
                 <div class="panel">
                     <div class="panel-header">
                         <div class="panel-title">
                             <div class="panel-icon">🧙</div>
-NPC 列表
+                            NPC列表
                         </div>
                         <div class="panel-stats">
                             <span class="stat-badge green" id="npc-count">加载中...</span>
                         </div>
                     </div>
                     <div class="panel-search">
-                        <input type="text" class="search-input" placeholder="请输入 NPC 名过滤" id="npcSearch" oninput="filterNpcs()">
+                        <input type="text" class="search-input" placeholder="请输入NPC名过滤" id="npcSearch" oninput="filterNpcs()">
                     </div>
                     <div class="panel-content" id="npcList">
-                        <div class="loading-state"><div class="spinner"></div><p>加载中...</p></div>
+                        <div class="loading-state">
+                            <div class="spinner"></div>
+                            <p>加载中...</p>
+                        </div>
                     </div>
                 </div>
+
                 <div class="panel">
                     <div class="panel-header">
                         <div class="panel-title">
                             <div class="panel-icon">📋</div>
-NPC 信息
+                            NPC信息
                         </div>
                     </div>
                     <div class="panel-content" id="npcDetail">
-                        <div class="empty-state"><div class="empty-icon">ℹ️</div><p>请从左边选择 NPC 查看详情</p></div>
+                        <div class="empty-state">
+                            <div class="empty-icon">ℹ️</div>
+                            <p>请从左边选择NPC查看详情</p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
+
+        <!-- 查看攻略 -->
         <div id="guides-tab" class="tab-content">
             <div class="content-grid" style="grid-template-columns: 1fr;">
                 <div class="panel" style="height: auto;">
                     <div class="panel-header">
                         <div class="panel-title">
                             <div class="panel-icon">📚</div>
-游戏攻略
+                            游戏攻略
                         </div>
                     </div>
                     <div class="panel-content" style="padding: 30px;">
                         <div style="max-width: 800px; margin: 0 auto;">
-                            <h2 style="color: #2d3748; margin-bottom: 20px;">大展宏图 新手攻略</h2>
+                            <h2 style="color: #2d3748; margin-bottom: 20px;">小猴子游戏 新手攻略</h2>
+
                             <div class="info-card" style="margin-bottom: 20px;">
                                 <h4>🎯 快速升级指南</h4>
                                 <p>1. 新手村任务：完成所有新手任务可获得基础装备和经验<br>
                                 2. 练级地图推荐：比奇省→盟重省→蜈蚣洞→猪洞→祖玛<br>
-                                3. 组队经验加成：组队可获得额外 20% 经验加成</p>
+                                3. 组队经验加成：组队可获得额外20%经验加成</p>
                             </div>
                             <div class="info-card" style="margin-bottom: 20px; border-left-color: #48bb78;">
                                 <h4>💰 赚钱攻略</h4>
-                                <p>1. 挖矿：购买鹤嘴锄在矿区挖矿，纯度 15 以上的黑铁矿可卖高价<br>
+                                <p>1. 挖矿：购买鹤嘴锄在矿区挖矿，纯度15以上的黑铁矿可卖高价<br>
                                 2. 打宝：白野猪、祖玛教主掉落高级装备<br>
                                 3. 交易行：低买高卖，关注市场波动</p>
                             </div>
                             <div class="info-card" style="border-left-color: #ed8936;">
-                                <h4>⚔️ PK 技巧</h4>
+                                <h4>⚔️ PK技巧</h4>
                                 <p>1. 战士：烈火剑法配合野蛮冲撞，近身爆发<br>
-                                2. 法师：魔法盾 + 火墙 + 冰咆哮，保持距离<br>
+                                2. 法师：魔法盾+火墙+冰咆哮，保持距离<br>
                                 3. 道士：神兽牵制，施毒术消耗，灵魂火符输出</p>
                             </div>
                         </div>
@@ -489,20 +888,42 @@ NPC 信息
             </div>
         </div>
     </main>
+
     <footer class="footer">
-        传奇服务器 QQ：<a href="tencent://message/?uin=2853790902">2853790902</a>
+        传奇服务器QQ：<a href="tencent://message/?uin=2853790902">2853790902</a>
     </footer>
+
     <script>
-        const API_BASE = '/api';
-        let allItems = [], allMonsters = [], allMaps = [], allNpcs = [];
-        let selectedItem = null, selectedMonster = null, selectedMap = null, selectedNpc = null;
+        // API 基础地址
+        const API_BASE = 'http://localhost:3000/api';
+        
+        // 数据缓存
+        let allItems = [];
+        let allMonsters = [];
+        let allMaps = [];
+        let allNpcs = [];
+        
+        let selectedItem = null;
+        let selectedMonster = null;
+        let selectedMap = null;
+        let selectedNpc = null;
 
-        document.addEventListener('DOMContentLoaded', function() { loadAllData(); });
+        // 初始化加载数据
+        document.addEventListener('DOMContentLoaded', function() {
+            loadAllData();
+        });
 
+        // 加载所有数据
         async function loadAllData() {
-            await Promise.all([loadItems(), loadMonsters(), loadMaps(), loadNpcs()]);
+            await Promise.all([
+                loadItems(),
+                loadMonsters(),
+                loadMaps(),
+                loadNpcs()
+            ]);
         }
 
+        // 加载物品
         async function loadItems() {
             try {
                 const res = await fetch(`${API_BASE}/items`);
@@ -512,40 +933,57 @@ NPC 信息
                 document.getElementById('item-count').textContent = `共计：${data.count}`;
             } catch (err) {
                 console.error('加载物品失败:', err);
+                document.getElementById('itemList').innerHTML = '<div class="empty-state"><p>加载失败，请检查网络</p></div>';
             }
         }
 
+        // 渲染物品列表
         function renderItems(items) {
             const container = document.getElementById('itemList');
             if (items.length === 0) {
                 container.innerHTML = '<div class="empty-state"><p>暂无数据</p></div>';
                 return;
             }
-            container.innerHTML = items.map(item => `
-                <div class="list-item ${selectedItem === item.id ? 'active' : ''}" onclick="selectItem(${item.id})">
-                    <div class="item-number">${item.id}</div>
-                    <div style="flex: 1;">
-                        <div class="item-name">${item.name} <span class="type-badge type-${item.type || 'unknown'}">${getTypeName(item.type)}</span></div>
-                        ${item.level_requirement > 0 ? `<div class="item-meta">等级要求：${item.level_requirement}</div>` : ''}
+            
+            container.innerHTML = items.map(item => {
+                const typeClass = `type-${item.type || 'unknown'}`;
+                const typeName = getTypeName(item.type);
+                return `
+                    <div class="list-item ${selectedItem === item.id ? 'active' : ''}" onclick="selectItem(${item.id})">
+                        <div class="item-number">${item.id}</div>
+                        <div style="flex: 1;">
+                            <div class="item-name">
+                                ${item.name}
+                                <span class="type-badge ${typeClass}">${typeName}</span>
+                            </div>
+                            ${item.level_requirement > 0 ? `<div class="item-meta">等级要求: ${item.level_requirement}</div>` : ''}
+                        </div>
                     </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
         }
 
+        // 过滤物品
         function filterItems() {
             const search = document.getElementById('itemSearch').value.toLowerCase();
             const filtered = allItems.filter(item => item.name.toLowerCase().includes(search));
             renderItems(filtered);
         }
 
+        // 选择物品
         async function selectItem(id) {
             selectedItem = id;
-            filterItems();
+            filterItems(); // 重新渲染以更新active状态
+            
             const item = allItems.find(i => i.id === id);
             if (!item) return;
+            
             try {
+                // 获取物品详情（包含出处）
                 const res = await fetch(`${API_BASE}/items/${id}`);
                 const detail = await res.json();
+                
+                // 渲染物品出处
                 const sourceContainer = document.getElementById('itemSource');
                 if (detail.sources && detail.sources.length > 0) {
                     document.getElementById('source-count').textContent = `共计：${detail.sources.length}`;
@@ -554,7 +992,7 @@ NPC 信息
                             <div class="info-card" style="margin-bottom: 12px;">
                                 <h4>📦 ${detail.name}</h4>
                                 <p>${detail.description || '暂无描述'}</p>
-                                ${detail.level_requirement > 0 ? `<p style="margin-top: 8px;">等级要求：${detail.level_requirement}</p>` : ''}
+                                ${detail.level_requirement > 0 ? `<p style="margin-top: 8px;">等级要求: ${detail.level_requirement}</p>` : ''}
                             </div>
                             <h4 style="margin: 16px 12px 12px; color: #2d3748; font-size: 14px;">掉落来源：</h4>
                             ${detail.sources.map(s => `
@@ -571,11 +1009,20 @@ NPC 信息
                     `;
                 } else {
                     document.getElementById('source-count').textContent = '共计：0';
-                    sourceContainer.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>暂无出处数据</p></div>';
+                    sourceContainer.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">📭</div>
+                            <p>暂无出处数据</p>
+                            <p style="font-size: 12px; margin-top: 8px;">请在后台添加物品出处</p>
+                        </div>
+                    `;
                 }
-            } catch (err) { console.error('加载物品详情失败:', err); }
+            } catch (err) {
+                console.error('加载物品详情失败:', err);
+            }
         }
 
+        // 加载怪物
         async function loadMonsters() {
             try {
                 const res = await fetch(`${API_BASE}/monsters`);
@@ -583,15 +1030,19 @@ NPC 信息
                 allMonsters = data.data;
                 renderMonsters(allMonsters);
                 document.getElementById('monster-count').textContent = `共计：${data.count}`;
-            } catch (err) { console.error('加载怪物失败:', err); }
+            } catch (err) {
+                console.error('加载怪物失败:', err);
+            }
         }
 
+        // 渲染怪物列表
         function renderMonsters(monsters) {
             const container = document.getElementById('monsterList');
             if (monsters.length === 0) {
                 container.innerHTML = '<div class="empty-state"><p>暂无数据</p></div>';
                 return;
             }
+            
             container.innerHTML = monsters.map(m => `
                 <div class="list-item ${selectedMonster === m.id ? 'active' : ''}" onclick="selectMonster(${m.id})">
                     <div class="item-number" style="background: #fed7d7; color: #c53030;">${m.id}</div>
@@ -603,32 +1054,54 @@ NPC 信息
             `).join('');
         }
 
+        // 过滤怪物
         function filterMonsters() {
             const search = document.getElementById('monsterSearch').value.toLowerCase();
             const filtered = allMonsters.filter(m => m.name.toLowerCase().includes(search));
             renderMonsters(filtered);
         }
 
+        // 选择怪物
         async function selectMonster(id, autoSelectMapId = null) {
             selectedMonster = id;
-            renderMonsters(allMonsters.filter(m => m.name.toLowerCase().includes((document.getElementById('monsterSearch')?.value || '').toLowerCase())));
+            renderMonsters(allMonsters.filter(m => 
+                m.name.toLowerCase().includes((document.getElementById('monsterSearch')?.value || '').toLowerCase())
+            ));
+            
             const monster = allMonsters.find(m => m.id === id);
             if (!monster) return;
+            
+            // 渲染怪物信息
             document.getElementById('monsterInfo').innerHTML = `
                 <div style="padding: 16px;">
                     <div class="info-card">
                         <h4>👹 ${monster.name}</h4>
-                        <div class="info-row"><span class="info-label">等级</span><span class="info-value">${monster.level}</span></div>
-                        <div class="info-row"><span class="info-label">血量</span><span class="info-value">${monster.hp}</span></div>
-                        <div class="info-row"><span class="info-label">攻击</span><span class="info-value">${monster.attack}</span></div>
-                        <div class="info-row"><span class="info-label">防御</span><span class="info-value">${monster.defense}</span></div>
+                        <div class="info-row">
+                            <span class="info-label">等级</span>
+                            <span class="info-value">${monster.level}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">血量</span>
+                            <span class="info-value">${monster.hp}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">攻击</span>
+                            <span class="info-value">${monster.attack}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">防御</span>
+                            <span class="info-value">${monster.defense}</span>
+                        </div>
                         ${monster.description ? `<p style="margin-top: 12px; color: #4a5568;">${monster.description}</p>` : ''}
                     </div>
                 </div>
             `;
+            
             try {
+                // 获取怪物刷新点
                 const res = await fetch(`${API_BASE}/monsters/${id}`);
                 const detail = await res.json();
+                
                 const spawnContainer = document.getElementById('monsterSpawns');
                 if (detail.spawns && detail.spawns.length > 0) {
                     spawnContainer.innerHTML = detail.spawns.map(s => `
@@ -637,18 +1110,32 @@ NPC 信息
                                 <span class="source-monster">🗺️ ${s.map_name}</span>
                                 <span class="source-rate">${s.spawn_point || '随机'}</span>
                             </div>
-                            ${s.refresh_time ? `<div style="font-size: 12px; color: #718096;">刷新：${s.refresh_time}分钟</div>` : ''}
+                            ${s.refresh_time ? `<div style="font-size: 12px; color: #718096;">刷新: ${s.refresh_time}分钟</div>` : ''}
                             ${s.notes ? `<div style="font-size: 12px; color: #718096; margin-top: 4px;">${s.notes}</div>` : ''}
                         </div>
                     `).join('');
-                    if (autoSelectMapId) selectMapById(autoSelectMapId);
-                    else selectMapById(detail.spawns[0].map_id);
+                    
+                    // 如果有自动选择的地图，显示走法
+                    if (autoSelectMapId) {
+                        selectMapById(autoSelectMapId);
+                    } else {
+                        // 默认选择第一个地图
+                        selectMapById(detail.spawns[0].map_id);
+                    }
                 } else {
-                    spawnContainer.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>暂无刷新点数据</p></div>';
+                    spawnContainer.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">📭</div>
+                            <p>暂无刷新点数据</p>
+                        </div>
+                    `;
                 }
-            } catch (err) { console.error('加载怪物详情失败:', err); }
+            } catch (err) {
+                console.error('加载怪物详情失败:', err);
+            }
         }
 
+        // 加载地图
         async function loadMaps() {
             try {
                 const res = await fetch(`${API_BASE}/maps`);
@@ -656,15 +1143,19 @@ NPC 信息
                 allMaps = data.data;
                 renderMaps(allMaps);
                 document.getElementById('map-count').textContent = `共计：${data.count}`;
-            } catch (err) { console.error('加载地图失败:', err); }
+            } catch (err) {
+                console.error('加载地图失败:', err);
+            }
         }
 
+        // 渲染地图列表
         function renderMaps(maps) {
             const container = document.getElementById('mapList');
             if (maps.length === 0) {
                 container.innerHTML = '<div class="empty-state"><p>暂无数据</p></div>';
                 return;
             }
+            
             container.innerHTML = maps.map(m => `
                 <div class="list-item ${selectedMap === m.id ? 'active' : ''}" onclick="selectMapById(${m.id})">
                     <div class="item-number" style="background: #c6f6d5; color: #22543d;">${m.id}</div>
@@ -673,17 +1164,24 @@ NPC 信息
             `).join('');
         }
 
+        // 过滤地图
         function filterMaps() {
             const search = document.getElementById('mapSearch').value.toLowerCase();
             const filtered = allMaps.filter(m => m.name.toLowerCase().includes(search));
             renderMaps(filtered);
         }
 
+        // 选择地图
         function selectMapById(id) {
             selectedMap = id;
-            renderMaps(allMaps.filter(m => m.name.toLowerCase().includes((document.getElementById('mapSearch')?.value || '').toLowerCase())));
+            renderMaps(allMaps.filter(m => 
+                m.name.toLowerCase().includes((document.getElementById('mapSearch')?.value || '').toLowerCase())
+            ));
+            
             const map = allMaps.find(m => m.id === id);
             if (!map) return;
+            
+            // 渲染地图详情
             const detailHtml = `
                 <div style="padding: 16px;">
                     <div class="info-card">
@@ -698,11 +1196,13 @@ NPC 信息
                     ` : '<div class="empty-state" style="padding: 40px;"><p>暂无走法说明</p></div>'}
                 </div>
             `;
+            
             document.getElementById('mapDetail').innerHTML = detailHtml;
             document.getElementById('mapRoute').innerHTML = detailHtml;
             document.getElementById('monsterRoute').innerHTML = detailHtml;
         }
 
+        // 加载NPC
         async function loadNpcs() {
             try {
                 const res = await fetch(`${API_BASE}/npcs`);
@@ -710,15 +1210,19 @@ NPC 信息
                 allNpcs = data.data;
                 renderNpcs(allNpcs);
                 document.getElementById('npc-count').textContent = `共计：${data.count}`;
-            } catch (err) { console.error('加载 NPC 失败:', err); }
+            } catch (err) {
+                console.error('加载NPC失败:', err);
+            }
         }
 
+        // 渲染NPC列表
         function renderNpcs(npcs) {
             const container = document.getElementById('npcList');
             if (npcs.length === 0) {
                 container.innerHTML = '<div class="empty-state"><p>暂无数据</p></div>';
                 return;
             }
+            
             container.innerHTML = npcs.map(n => `
                 <div class="list-item ${selectedNpc === n.id ? 'active' : ''}" onclick="selectNpc(${n.id})">
                     <div class="item-number" style="background: #feebc8; color: #c05621;">${n.id}</div>
@@ -730,24 +1234,39 @@ NPC 信息
             `).join('');
         }
 
+        // 过滤NPC
         function filterNpcs() {
             const search = document.getElementById('npcSearch').value.toLowerCase();
             const filtered = allNpcs.filter(n => n.name.toLowerCase().includes(search));
             renderNpcs(filtered);
         }
 
+        // 选择NPC
         function selectNpc(id) {
             selectedNpc = id;
-            renderNpcs(allNpcs.filter(n => n.name.toLowerCase().includes((document.getElementById('npcSearch')?.value || '').toLowerCase())));
+            renderNpcs(allNpcs.filter(n => 
+                n.name.toLowerCase().includes((document.getElementById('npcSearch')?.value || '').toLowerCase())
+            ));
+            
             const npc = allNpcs.find(n => n.id === id);
             if (!npc) return;
+            
             document.getElementById('npcDetail').innerHTML = `
                 <div style="padding: 16px;">
                     <div class="info-card">
                         <h4>🧙 ${npc.name}</h4>
-                        <div class="info-row"><span class="info-label">所在地图</span><span class="info-value">${npc.map_name || '未知'}</span></div>
-                        <div class="info-row"><span class="info-label">坐标</span><span class="info-value">${npc.position || '未知'}</span></div>
-                        <div class="info-row"><span class="info-label">功能</span><span class="info-value">${npc.function || '暂无'}</span></div>
+                        <div class="info-row">
+                            <span class="info-label">所在地图</span>
+                            <span class="info-value">${npc.map_name || '未知'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">坐标</span>
+                            <span class="info-value">${npc.position || '未知'}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">功能</span>
+                            <span class="info-value">${npc.function || '暂无'}</span>
+                        </div>
                     </div>
                     ${npc.dialogue ? `
                         <div class="info-card" style="margin-top: 12px; border-left-color: #ed8936;">
@@ -759,28 +1278,60 @@ NPC 信息
             `;
         }
 
+        // 格式化走法（给方向键加样式）
         function formatRoute(route) {
-            return route.replace(/上/g, '<span class="direction">↑上</span>').replace(/下/g, '<span class="direction">↓下</span>').replace(/左/g, '<span class="direction">←左</span>').replace(/右/g, '<span class="direction">→右</span>');
+            return route
+                .replace(/上/g, '<span class="direction">↑上</span>')
+                .replace(/下/g, '<span class="direction">↓下</span>')
+                .replace(/左/g, '<span class="direction">←左</span>')
+                .replace(/右/g, '<span class="direction">→右</span>');
         }
 
+        // 获取类型名称
         function getTypeName(type) {
-            const names = { weapon: '武器', armor: '防具', helmet: '头盔', necklace: '项链', ring: '戒指', bracelet: '手镯', shoes: '鞋子', consumable: '消耗品', material: '材料' };
+            const names = {
+                weapon: '武器',
+                armor: '防具',
+                helmet: '头盔',
+                necklace: '项链',
+                ring: '戒指',
+                bracelet: '手镯',
+                shoes: '鞋子',
+                consumable: '消耗品',
+                material: '材料'
+            };
             return names[type] || '其他';
         }
 
+        // 切换标签
         function switchTab(tabName) {
             document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
             event.target.classList.add('active');
+            
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
             document.getElementById(tabName + '-tab').classList.add('active');
+            
             document.getElementById('navTabs').classList.remove('mobile-open');
             document.getElementById('mobileOverlay').classList.remove('active');
         }
 
+        // 移动端菜单
         function toggleMobileMenu() {
             document.getElementById('navTabs').classList.toggle('mobile-open');
             document.getElementById('mobileOverlay').classList.toggle('active');
         }
     </script>
 </body>
-</html>
+</html>'''
+
+print("✅ 前台查询网站代码已生成")
+print(f"📄 代码长度: {len(frontend_html)} 字符")
+print("\n🎉 所有代码生成完毕！")
+print("\n" + "="*50)
+print("📦 项目文件清单：")
+print("="*50)
+print("1. server.js      - 后端API服务器 (16KB)")
+print("2. admin.html    - 后台管理界面 (54KB)")
+print("3. index.html    - 前台查询网站 (当前文件)")
+print("4. package.json  - 依赖配置 (需创建)")
+print("="*50)
