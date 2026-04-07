@@ -5,10 +5,9 @@ let db;
 
 function connectDB() {
     return new Promise((resolve, reject) => {
-        // Railway 环境下使用 Volume 路径，本地使用当前目录
-        const dbPath = process.env.RAILWAY 
-            ? './game.db'
-            : path.join(__dirname, 'game.db');
+        // 使用环境变量指定的路径，或者默认路径
+        // Railway 的 Volume 挂载在 /app，数据库文件会持久化保存
+        const dbPath = process.env.DATABASE_PATH || '/app/game.db';
         console.log('📁 数据库路径:', dbPath);
         
         db = new sqlite3.Database(dbPath, (err) => {
