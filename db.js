@@ -5,7 +5,9 @@ let db;
 
 function connectDB() {
     return new Promise((resolve, reject) => {
-        const dbPath = path.join(__dirname, 'game.db');
+        // 使用环境变量指定的路径，或者默认路径
+        // Railway 的 Volume 会挂载到 /app，但我们需要保存到 Volume 内的子目录
+        const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'data', 'game.db');
         console.log('📁 数据库路径:', dbPath);
         
         db = new sqlite3.Database(dbPath, (err) => {
