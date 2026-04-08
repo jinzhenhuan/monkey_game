@@ -7,7 +7,7 @@ function connectDB() {
     return new Promise((resolve, reject) => {
         // 使用环境变量指定的路径，或者默认路径
         // Railway 的 Volume 挂载在 /app/data，数据库文件会持久化保存
-        const dbPath = process.env.DATABASE_PATH || '/app/data/game.db';
+        const dbPath = process.env.DATABASE_PATH || path.join(__dirname, 'data', 'game.db');
         console.log('📁 数据库路径:', dbPath);
         
         db = new sqlite3.Database(dbPath, (err) => {
@@ -32,6 +32,8 @@ async function initializeTables() {
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
             type TEXT,
+            category TEXT,
+            quality TEXT,
             description TEXT,
             level_requirement INTEGER DEFAULT 0,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
@@ -40,10 +42,10 @@ async function initializeTables() {
         CREATE TABLE IF NOT EXISTS monsters (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
-            level INTEGER DEFAULT 1,
-            hp INTEGER DEFAULT 100,
+            force INTEGER DEFAULT 100,
             attack INTEGER DEFAULT 10,
-            defense INTEGER DEFAULT 5,
+            intelligence INTEGER DEFAULT 5,
+            speed INTEGER DEFAULT 5,
             description TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
@@ -59,12 +61,10 @@ async function initializeTables() {
         CREATE TABLE IF NOT EXISTS item_sources (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             item_id INTEGER NOT NULL,
-            monster_id INTEGER NOT NULL,
             map_id INTEGER,
             drop_rate TEXT,
             notes TEXT,
             FOREIGN KEY (item_id) REFERENCES items(id),
-            FOREIGN KEY (monster_id) REFERENCES monsters(id),
             FOREIGN KEY (map_id) REFERENCES maps(id)
         );
         
@@ -88,6 +88,13 @@ async function initializeTables() {
             dialogue TEXT,
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (map_id) REFERENCES maps(id)
+        );
+        
+        CREATE TABLE IF NOT EXISTS guides (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            title TEXT NOT NULL,
+            content TEXT NOT NULL,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         );
     `;
 

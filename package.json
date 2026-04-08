@@ -1,7 +1,7 @@
 {
   "name": "game-query-system",
-  "version": "1.0.0",
-  "description": "大展宏图游戏查询系统",
+  "version": "1.2.0",
+  "description": "小猴子游戏查询系统",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
@@ -19,6 +19,6 @@
     "legend",
     "mir"
   ],
-  "author": "Your Name",
+  "author": "jinzhenhuan",
   "license": "MIT"
 }

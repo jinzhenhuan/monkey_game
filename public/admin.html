@@ -551,7 +551,7 @@
             /* 主内容区 */
             .main-content {
                 margin-left: 0;
-                padding: 60px 16px 16px;
+                padding: 24px 16px 16px;
             }
 
             /* 顶部栏 */
@@ -685,8 +685,8 @@
                     <span>物品管理</span>
                 </div>
                 <div class="nav-item" data-page="monsters" onclick="showPage('monsters')">
-                    <span class="nav-icon">👹</span>
-                    <span>怪物管理</span>
+                    <span class="nav-icon">⚔️</span>
+                    <span>武将管理</span>
                 </div>
                 <div class="nav-item" data-page="maps" onclick="showPage('maps')">
                     <span class="nav-icon">🗺️</span>
@@ -698,11 +698,15 @@
                 </div>
                 <div class="nav-item" data-page="spawns" onclick="showPage('spawns')">
                     <span class="nav-icon">📍</span>
-                    <span>怪物刷新</span>
+                    <span>武将刷新</span>
                 </div>
                 <div class="nav-item" data-page="npcs" onclick="showPage('npcs')">
                     <span class="nav-icon">🧙</span>
                     <span>NPC管理</span>
+                </div>
+                <div class="nav-item" data-page="guides" onclick="showPage('guides')">
+                    <span class="nav-icon">📚</span>
+                    <span>攻略管理</span>
                 </div>
             </nav>
         </aside>
@@ -728,7 +732,7 @@
                         <div class="stat-icon green">👹</div>
                         <div class="stat-info">
                             <h3 id="stat-monsters">0</h3>
-                            <p>怪物总数</p>
+                            <p>武将总数</p>
                         </div>
                     </div>
                     <div class="stat-card">
@@ -752,11 +756,11 @@
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;">
                         <div style="padding: 16px; background: #f7fafc; border-radius: 8px; border-left: 4px solid #4299e1;">
                             <h4 style="color: #2d3748; margin-bottom: 8px;">第一步：添加基础数据</h4>
-                            <p style="font-size: 13px; color: #718096;">先添加地图 → 怪物 → 物品</p>
+                            <p style="font-size: 13px; color: #718096;">先添加地图 → 武将 → 物品</p>
                         </div>
                         <div style="padding: 16px; background: #f7fafc; border-radius: 8px; border-left: 4px solid #48bb78;">
                             <h4 style="color: #2d3748; margin-bottom: 8px;">第二步：建立关联</h4>
-                            <p style="font-size: 13px; color: #718096;">在"物品出处"关联物品和怪物</p>
+                            <p style="font-size: 13px; color: #718096;">在"物品出处"关联物品和武将</p>
                         </div>
                         <div style="padding: 16px; background: #f7fafc; border-radius: 8px; border-left: 4px solid #ed8936;">
                             <h4 style="color: #2d3748; margin-bottom: 8px;">第三步：查看前台</h4>
@@ -799,18 +803,18 @@
                 </div>
             </div>
 
-            <!-- 怪物管理页 -->
+            <!-- 武将管理页 -->
             <div id="page-monsters" class="page-content hidden">
                 <div class="top-bar">
-                    <h1 class="page-title">👹 怪物管理</h1>
+                    <h1 class="page-title">⚔️ 武将管理</h1>
                 </div>
                 
                 <div class="action-bar">
                     <div class="search-box">
                         <span>🔍</span>
-                        <input type="text" id="monster-search" placeholder="搜索怪物名称..." oninput="loadMonsters()">
+                        <input type="text" id="monster-search" placeholder="搜索武将名称..." oninput="loadMonsters()">
                     </div>
-                    <button class="btn btn-primary" onclick="openModal('monster')">➕ 添加怪物</button>
+                    <button class="btn btn-primary" onclick="openModal('monster')">➕ 添加武将</button>
                 </div>
 
                 <div class="data-table-container">
@@ -818,11 +822,11 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>怪物名称</th>
-                                <th>等级</th>
-                                <th>血量</th>
-                                <th>攻击</th>
-                                <th>防御</th>
+                                <th>武将名称</th>
+                                <th>兵力</th>
+                                <th>武力</th>
+                                <th>智力</th>
+                                <th>速度</th>
                                 <th>操作</th>
                             </tr>
                         </thead>
@@ -882,7 +886,6 @@
                             <tr>
                                 <th>ID</th>
                                 <th>物品</th>
-                                <th>掉落怪物</th>
                                 <th>地图</th>
                                 <th>爆率</th>
                                 <th>备注</th>
@@ -896,10 +899,10 @@
                 </div>
             </div>
 
-            <!-- 怪物刷新页 -->
+            <!-- 武将刷新页 -->
             <div id="page-spawns" class="page-content hidden">
                 <div class="top-bar">
-                    <h1 class="page-title">📍 怪物刷新管理</h1>
+                    <h1 class="page-title">📍 武将刷新管理</h1>
                 </div>
                 
                 <div class="action-bar">
@@ -912,7 +915,7 @@
                         <thead>
                             <tr>
                                 <th>ID</th>
-                                <th>怪物</th>
+                                <th>武将</th>
                                 <th>地图</th>
                                 <th>刷新坐标</th>
                                 <th>刷新时间</th>
@@ -921,6 +924,37 @@
                             </tr>
                         </thead>
                         <tbody id="spawns-table-body">
+                            <!-- 动态生成 -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- 攻略管理页 -->
+            <div id="page-guides" class="page-content hidden">
+                <div class="top-bar">
+                    <h1 class="page-title">📚 攻略管理</h1>
+                </div>
+                
+                <div class="action-bar">
+                    <div class="search-box">
+                        <span>🔍</span>
+                        <input type="text" id="guide-search" placeholder="搜索攻略标题..." oninput="loadGuides()">
+                    </div>
+                    <button class="btn btn-primary" onclick="openModal('guide')">➕ 添加攻略</button>
+                </div>
+
+                <div class="data-table-container">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>标题</th>
+                                <th>内容</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody id="guides-table-body">
                             <!-- 动态生成 -->
                         </tbody>
                     </table>
@@ -1010,6 +1044,41 @@
             overlay.classList.toggle('active');
         }
 
+        // 更新分类选项
+        function updateCategoryOptions() {
+            const typeSelect = document.getElementById('form-type');
+            const categorySelect = document.getElementById('form-category');
+            const selectedType = typeSelect.value;
+            
+            // 清空现有选项
+            categorySelect.innerHTML = '';
+            
+            // 添加默认选项
+            const defaultOption = document.createElement('option');
+            defaultOption.value = '';
+            defaultOption.textContent = '请选择';
+            categorySelect.appendChild(defaultOption);
+            
+            // 根据类型添加分类选项
+            if (selectedType === '装备') {
+                const categories = ['武器', '头盔', '盾牌', '盔甲', '兵种', '玉玺', '称号'];
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    categorySelect.appendChild(option);
+                });
+            } else if (selectedType === '谋略') {
+                const categories = ['阵型', '计谋'];
+                categories.forEach(category => {
+                    const option = document.createElement('option');
+                    option.value = category;
+                    option.textContent = category;
+                    categorySelect.appendChild(option);
+                });
+            }
+        }
+
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
             loadStats();
@@ -1019,6 +1088,7 @@
             loadNpcs();
             loadSources();
             loadSpawns();
+            loadGuides();
         });
 
         // 切换页面
@@ -1045,6 +1115,7 @@
             if (page === 'sources') loadSources();
             if (page === 'spawns') loadSpawns();
             if (page === 'npcs') loadNpcs();
+            if (page === 'guides') loadGuides();
         }
 
         // 加载统计数据
@@ -1088,7 +1159,7 @@
             }
         }
 
-        // 加载怪物列表
+        // 加载武将列表
         async function loadMonsters() {
             const search = document.getElementById('monster-search')?.value || '';
             try {
@@ -1101,10 +1172,10 @@
                     <tr>
                         <td>${m.id}</td>
                         <td><strong>${m.name}</strong></td>
-                        <td><span class="tag tag-orange">Lv.${m.level}</span></td>
-                        <td>${m.hp}</td>
-                        <td>${m.attack}</td>
-                        <td>${m.defense}</td>
+                        <td>${m.force || 0}</td>
+                        <td>${m.attack || 0}</td>
+                        <td>${m.intelligence || 0}</td>
+                        <td>${m.speed || 0}</td>
                         <td>
                             <button class="btn btn-sm btn-secondary" onclick="editMonster(${m.id})">编辑</button>
                             <button class="btn btn-sm btn-danger" onclick="deleteMonster(${m.id})">删除</button>
@@ -1112,7 +1183,7 @@
                     </tr>
                 `).join('');
             } catch (err) {
-                console.error('加载怪物失败:', err);
+                console.error('加载武将失败:', err);
             }
         }
 
@@ -1180,7 +1251,6 @@
                     <tr>
                         <td>${s.id}</td>
                         <td><strong>${s.item_name}</strong></td>
-                        <td><span class="tag tag-orange">${s.monster_name}</span></td>
                         <td>${s.map_name || '-'}</td>
                         <td><span class="tag tag-green">${s.drop_rate || '未知'}</span></td>
                         <td>${s.notes || '-'}</td>
@@ -1194,7 +1264,7 @@
             }
         }
 
-        // 加载怪物刷新
+        // 加载武将刷新
         async function loadSpawns() {
             try {
                 const res = await fetch(`${API_BASE}/monster-spawns`);
@@ -1219,6 +1289,30 @@
             }
         }
 
+        // 加载攻略
+        async function loadGuides() {
+            try {
+                const res = await fetch(`${API_BASE}/guides`);
+                const data = await res.json();
+                cache.guides = data.data;
+                
+                const tbody = document.getElementById('guides-table-body');
+                tbody.innerHTML = data.data.map(g => `
+                    <tr>
+                        <td>${g.id}</td>
+                        <td><strong>${g.title}</strong></td>
+                        <td>${g.content.substring(0, 50)}${g.content.length > 50 ? '...' : ''}</td>
+                        <td>
+                            <button class="btn btn-sm btn-secondary" onclick="editGuide(${g.id})">编辑</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteGuide(${g.id})">删除</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                console.error('加载攻略失败:', err);
+            }
+        }
+
         // 打开模态框
         function openModal(type, id = null) {
             editingType = type;
@@ -1229,17 +1323,33 @@
             
             const titles = {
                 item: id ? '编辑物品' : '添加物品',
-                monster: id ? '编辑怪物' : '添加怪物',
+                monster: id ? '编辑武将' : '添加武将',
                 map: id ? '编辑地图' : '添加地图',
                 npc: id ? '编辑NPC' : '添加NPC',
                 source: '添加物品出处',
-                spawn: '添加怪物刷新点'
+                spawn: '添加武将刷新点',
+                guide: id ? '编辑攻略' : '添加攻略'
             };
             
             title.textContent = titles[type];
             
             // 生成表单
             body.innerHTML = generateForm(type, id);
+            
+            // 初始化分类选项（如果是物品表单）
+            if (type === 'item') {
+                setTimeout(() => {
+                    updateCategoryOptions();
+                    // 设置分类字段的默认值（如果是编辑模式）
+                    if (id) {
+                        const item = cache.items.find(i => i.id === id);
+                        if (item && item.category) {
+                            const categorySelect = document.getElementById('form-category');
+                            categorySelect.value = item.category;
+                        }
+                    }
+                }, 100);
+            }
             
             modal.classList.add('active');
         }
@@ -1255,18 +1365,36 @@
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">类型</label>
-                            <select class="form-select" id="form-type">
+                            <label class="form-label">类型 *</label>
+                            <select class="form-select" id="form-type" onchange="updateCategoryOptions()">
                                 <option value="">请选择</option>
-                                <option value="weapon" ${item.type === 'weapon' ? 'selected' : ''}>武器</option>
-                                <option value="armor" ${item.type === 'armor' ? 'selected' : ''}>防具</option>
-                                <option value="helmet" ${item.type === 'helmet' ? 'selected' : ''}>头盔</option>
-                                <option value="necklace" ${item.type === 'necklace' ? 'selected' : ''}>项链</option>
-                                <option value="ring" ${item.type === 'ring' ? 'selected' : ''}>戒指</option>
-                                <option value="bracelet" ${item.type === 'bracelet' ? 'selected' : ''}>手镯</option>
-                                <option value="shoes" ${item.type === 'shoes' ? 'selected' : ''}>鞋子</option>
-                                <option value="consumable" ${item.type === 'consumable' ? 'selected' : ''}>消耗品</option>
-                                <option value="material" ${item.type === 'material' ? 'selected' : ''}>材料</option>
+                                <option value="装备" ${item.type === '装备' ? 'selected' : ''}>装备</option>
+                                <option value="宝物" ${item.type === '宝物' ? 'selected' : ''}>宝物</option>
+                                <option value="谋略" ${item.type === '谋略' ? 'selected' : ''}>谋略</option>
+                                <option value="道具" ${item.type === '道具' ? 'selected' : ''}>道具</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">分类</label>
+                            <select class="form-select" id="form-category">
+                                <option value="">请选择类型</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">品级 *</label>
+                            <select class="form-select" id="form-quality">
+                                <option value="">请选择</option>
+                                <option value="黄色" ${item.quality === '黄色' ? 'selected' : ''}>黄色</option>
+                                <option value="红色" ${item.quality === '红色' ? 'selected' : ''}>红色</option>
+                                <option value="绿色" ${item.quality === '绿色' ? 'selected' : ''}>绿色</option>
+                                <option value="橙色" ${item.quality === '橙色' ? 'selected' : ''}>橙色</option>
+                                <option value="紫色" ${item.quality === '紫色' ? 'selected' : ''}>紫色</option>
+                                <option value="粉色" ${item.quality === '粉色' ? 'selected' : ''}>粉色</option>
+                                <option value="蓝色" ${item.quality === '蓝色' ? 'selected' : ''}>蓝色</option>
+                                <option value="灰色" ${item.quality === '灰色' ? 'selected' : ''}>灰色</option>
+                                <option value="白色" ${item.quality === '白色' ? 'selected' : ''}>白色</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -1285,32 +1413,34 @@
                 const m = id ? cache.monsters.find(i => i.id === id) : {};
                 return `
                     <div class="form-group">
-                        <label class="form-label">怪物名称 *</label>
-                        <input type="text" class="form-input" id="form-name" value="${m.name || ''}" placeholder="如：白野猪">
+                        <label class="form-label">武将名称 *</label>
+                        <input type="text" class="form-input" id="form-name" value="${m.name || ''}" placeholder="如：关羽">
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">等级</label>
-                            <input type="number" class="form-input" id="form-level" value="${m.level || ''}" placeholder="1">
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">血量</label>
-                            <input type="number" class="form-input" id="form-hp" value="${m.hp || ''}" placeholder="100">
+                            <label class="form-label">兵力</label>
+                            <input type="number" class="form-input" id="form-force" value="${m.force || ''}" placeholder="1000">
                         </div>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">攻击</label>
-                            <input type="number" class="form-input" id="form-attack" value="${m.attack || ''}" placeholder="10">
+                            <label class="form-label">武力</label>
+                            <input type="number" class="form-input" id="form-attack" value="${m.attack || ''}" placeholder="100">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">防御</label>
-                            <input type="number" class="form-input" id="form-defense" value="${m.defense || ''}" placeholder="5">
+                            <label class="form-label">智力</label>
+                            <input type="number" class="form-input" id="form-intelligence" value="${m.intelligence || ''}" placeholder="80">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label class="form-label">速度</label>
+                            <input type="number" class="form-input" id="form-speed" value="${m.speed || ''}" placeholder="50">
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">描述</label>
-                        <textarea class="form-textarea" id="form-description" placeholder="怪物描述、技能说明...">${m.description || ''}</textarea>
+                        <textarea class="form-textarea" id="form-description" placeholder="武将描述、技能说明...">${m.description || ''}</textarea>
                     </div>
                 `;
             }
@@ -1371,25 +1501,15 @@
             
             if (type === 'source') {
                 const itemOptions = cache.items.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
-                const monsterOptions = cache.monsters.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
                 const mapOptions = cache.maps.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
                 
                 return `
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">物品 *</label>
-                            <select class="form-select" id="form-item">
-                                <option value="">请选择物品</option>
-                                ${itemOptions}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">掉落怪物 *</label>
-                            <select class="form-select" id="form-monster">
-                                <option value="">请选择怪物</option>
-                                ${monsterOptions}
-                            </select>
-                        </div>
+                    <div class="form-group">
+                        <label class="form-label">物品 *</label>
+                        <select class="form-select" id="form-item">
+                            <option value="">请选择物品</option>
+                            ${itemOptions}
+                        </select>
                     </div>
                     <div class="form-row">
                         <div class="form-group">
@@ -1418,9 +1538,9 @@
                 return `
                     <div class="form-row">
                         <div class="form-group">
-                            <label class="form-label">怪物 *</label>
+                            <label class="form-label">武将 *</label>
                             <select class="form-select" id="form-monster">
-                                <option value="">请选择怪物</option>
+                                <option value="">请选择武将</option>
                                 ${monsterOptions}
                             </select>
                         </div>
@@ -1445,6 +1565,21 @@
                     <div class="form-group">
                         <label class="form-label">备注</label>
                         <input type="text" class="form-input" id="form-notes" placeholder="如：BOSS点、精英怪...">
+                    </div>
+                `;
+            }
+            
+            if (type === 'guide') {
+                const guide = id ? cache.guides.find(g => g.id === id) : {};
+                return `
+                    <div class="form-group">
+                        <label class="form-label">攻略标题 *</label>
+                        <input type="text" class="form-input" id="form-title" value="${guide.title || ''}" placeholder="如：新手升级指南">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">攻略内容 *</label>
+                        <textarea class="form-textarea" id="form-content" placeholder="请输入攻略内容，支持多行文本..." style="min-height: 200px;">${guide.content || ''}</textarea>
+                        <p class="form-hint">支持多行文本，使用回车键换行</p>
                     </div>
                 `;
             }
@@ -1473,16 +1608,18 @@
                 data = {
                     name: document.getElementById('form-name').value,
                     type: document.getElementById('form-type').value,
+                    category: document.getElementById('form-category').value,
+                    quality: document.getElementById('form-quality').value,
                     level_requirement: document.getElementById('form-level').value,
                     description: document.getElementById('form-description').value
                 };
             } else if (type === 'monster') {
                 data = {
                     name: document.getElementById('form-name').value,
-                    level: document.getElementById('form-level').value,
-                    hp: document.getElementById('form-hp').value,
+                    force: document.getElementById('form-force').value,
                     attack: document.getElementById('form-attack').value,
-                    defense: document.getElementById('form-defense').value,
+                    intelligence: document.getElementById('form-intelligence').value,
+                    speed: document.getElementById('form-speed').value,
                     description: document.getElementById('form-description').value
                 };
             } else if (type === 'map') {
@@ -1504,7 +1641,6 @@
                 method = 'POST';
                 data = {
                     item_id: document.getElementById('form-item').value,
-                    monster_id: document.getElementById('form-monster').value,
                     map_id: document.getElementById('form-map').value,
                     drop_rate: document.getElementById('form-rate').value,
                     notes: document.getElementById('form-notes').value
@@ -1519,19 +1655,32 @@
                     refresh_time: document.getElementById('form-time').value,
                     notes: document.getElementById('form-notes').value
                 };
+            } else if (type === 'guide') {
+                data = {
+                    title: document.getElementById('form-title').value,
+                    content: document.getElementById('form-content').value
+                };
             }
             
             // 验证必填
-            if (!data.name && type !== 'source' && type !== 'spawn') {
+            if (!data.name && type !== 'source' && type !== 'spawn' && type !== 'guide') {
                 showToast('请填写名称', 'error');
                 return;
             }
-            if (type === 'source' && (!data.item_id || !data.monster_id)) {
-                showToast('请选择物品和怪物', 'error');
+            if (type === 'item' && (!data.type || !data.quality)) {
+                showToast('请选择类型和品级', 'error');
+                return;
+            }
+            if (type === 'guide' && (!data.title || !data.content)) {
+                showToast('请填写攻略标题和内容', 'error');
+                return;
+            }
+            if (type === 'source' && (!data.item_id)) {
+                showToast('请选择物品', 'error');
                 return;
             }
             if (type === 'spawn' && (!data.monster_id || !data.map_id)) {
-                showToast('请选择怪物和地图', 'error');
+                showToast('请选择武将和地图', 'error');
                 return;
             }
             
@@ -1554,6 +1703,7 @@
                     if (type === 'npc') loadNpcs();
                     if (type === 'source') loadSources();
                     if (type === 'spawn') loadSpawns();
+                    if (type === 'guide') loadGuides();
                     loadStats();
                 } else {
                     showToast(result.error || '操作失败', 'error');
@@ -1574,7 +1724,7 @@
         }
 
         async function deleteMonster(id) {
-            if (!confirm('确定删除这个怪物吗？')) return;
+            if (!confirm('确定删除这个武将吗？')) return;
             await fetch(`${API_BASE}/monsters/${id}`, { method: 'DELETE' });
             loadMonsters();
             loadStats();
@@ -1611,11 +1761,19 @@
             showToast('删除成功', 'success');
         }
 
+        async function deleteGuide(id) {
+            if (!confirm('确定删除这个攻略吗？')) return;
+            await fetch(`${API_BASE}/guides/${id}`, { method: 'DELETE' });
+            loadGuides();
+            showToast('删除成功', 'success');
+        }
+
         // 编辑操作
         function editItem(id) { openModal('item', id); }
         function editMonster(id) { openModal('monster', id); }
         function editMap(id) { openModal('map', id); }
         function editNpc(id) { openModal('npc', id); }
+        function editGuide(id) { openModal('guide', id); }
 
         // Toast 提示
         function showToast(message, type = 'success') {

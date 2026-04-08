@@ -75,14 +75,11 @@ app.get('/api/items/:id', async (req, res) => {
                 SELECT 
                     s.id,
                     s.item_id,
-                    s.monster_id,
                     s.map_id,
                     s.drop_rate,
                     s.notes,
-                    m.name as monster_name,
                     mp.name as map_name
                 FROM item_sources s
-                LEFT JOIN monsters m ON s.monster_id = m.id
                 LEFT JOIN maps mp ON s.map_id = mp.id
                 WHERE s.item_id = ?
             `;
@@ -100,13 +97,13 @@ app.get('/api/items/:id', async (req, res) => {
 app.post('/api/items', async (req, res) => {
     try {
         const db = getDB();
-        const { name, type, description, level_requirement } = req.body;
+        const { name, type, category, quality, description, level_requirement } = req.body;
         
         if (!name) return res.status(400).json({ error: '物品名称必填' });
         
-        const sql = `INSERT INTO items (name, type, description, level_requirement) VALUES (?, ?, ?, ?)`;
+        const sql = `INSERT INTO items (name, type, category, quality, description, level_requirement) VALUES (?, ?, ?, ?, ?, ?)`;
         
-        db.run(sql, [name, type || '', description || '', level_requirement || 0], function(err) {
+        db.run(sql, [name, type || '', category || '', quality || '', description || '', level_requirement || 0], function(err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ id: this.lastID, message: '创建成功' });
         });
@@ -119,11 +116,11 @@ app.put('/api/items/:id', async (req, res) => {
     try {
         const db = getDB();
         const { id } = req.params;
-        const { name, type, description, level_requirement } = req.body;
+        const { name, type, category, quality, description, level_requirement } = req.body;
         
-        const sql = `UPDATE items SET name = ?, type = ?, description = ?, level_requirement = ? WHERE id = ?`;
+        const sql = `UPDATE items SET name = ?, type = ?, category = ?, quality = ?, description = ?, level_requirement = ? WHERE id = ?`;
         
-        db.run(sql, [name, type, description, level_requirement, id], function(err) {
+        db.run(sql, [name, type, category, quality, description, level_requirement, id], function(err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ changes: this.changes, message: '更新成功' });
         });
@@ -157,7 +154,7 @@ app.get('/api/monsters', async (req, res) => {
             query += ' AND name LIKE ?';
             params.push(`%${search}%`);
         }
-        query += ' ORDER BY level ASC, id DESC';
+        query += ' ORDER BY id DESC';
         
         db.all(query, params, (err, rows) => {
             if (err) return res.status(500).json({ error: err.message });
@@ -175,7 +172,7 @@ app.get('/api/monsters/:id', async (req, res) => {
         
         db.get('SELECT * FROM monsters WHERE id = ?', [id], (err, monster) => {
             if (err) return res.status(500).json({ error: err.message });
-            if (!monster) return res.status(404).json({ error: '怪物不存在' });
+            if (!monster) return res.status(404).json({ error: '武将不存在' });
             
             const sql = `
                 SELECT 
@@ -204,13 +201,13 @@ app.get('/api/monsters/:id', async (req, res) => {
 app.post('/api/monsters', async (req, res) => {
     try {
         const db = getDB();
-        const { name, level, hp, attack, defense, description } = req.body;
+        const { name, force, attack, intelligence, speed, description } = req.body;
         
-        if (!name) return res.status(400).json({ error: '怪物名称必填' });
+        if (!name) return res.status(400).json({ error: '武将名称必填' });
         
-        const sql = `INSERT INTO monsters (name, level, hp, attack, defense, description) VALUES (?, ?, ?, ?, ?, ?)`;
+        const sql = `INSERT INTO monsters (name, force, attack, intelligence, speed, description) VALUES (?, ?, ?, ?, ?, ?)`;
         
-        db.run(sql, [name, level || 1, hp || 100, attack || 10, defense || 5, description || ''], function(err) {
+        db.run(sql, [name, force || 100, attack || 10, intelligence || 5, speed || 5, description || ''], function(err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ id: this.lastID, message: '创建成功' });
         });
@@ -223,11 +220,11 @@ app.put('/api/monsters/:id', async (req, res) => {
     try {
         const db = getDB();
         const { id } = req.params;
-        const { name, level, hp, attack, defense, description } = req.body;
+        const { name, force, attack, intelligence, speed, description } = req.body;
         
-        const sql = `UPDATE monsters SET name = ?, level = ?, hp = ?, attack = ?, defense = ?, description = ? WHERE id = ?`;
+        const sql = `UPDATE monsters SET name = ?, force = ?, attack = ?, intelligence = ?, speed = ?, description = ? WHERE id = ?`;
         
-        db.run(sql, [name, level, hp, attack, defense, description, id], function(err) {
+        db.run(sql, [name, force, attack, intelligence, speed, description, id], function(err) {
             if (err) return res.status(500).json({ error: err.message });
             res.json({ changes: this.changes, message: '更新成功' });
         });
@@ -345,16 +342,13 @@ app.get('/api/item-sources', async (req, res) => {
             SELECT 
                 s.id,
                 s.item_id,
-                s.monster_id,
                 s.map_id,
                 s.drop_rate,
                 s.notes,
                 i.name as item_name,
-                m.name as monster_name,
                 mp.name as map_name
             FROM item_sources s
             LEFT JOIN items i ON s.item_id = i.id
-            LEFT JOIN monsters m ON s.monster_id = m.id
             LEFT JOIN maps mp ON s.map_id = mp.id
             ORDER BY s.id DESC
         `;
@@ -371,17 +365,15 @@ app.get('/api/item-sources', async (req, res) => {
 app.post('/api/item-sources', async (req, res) => {
     try {
         const db = getDB();
-        const { item_id, monster_id, map_id, drop_rate, notes } = req.body;
+        const { item_id, map_id, drop_rate, notes } = req.body;
         
-        if (!item_id || !monster_id) {
-            return res.status(400).json({ error: '物品和怪物必填' });
-        }
+        if (!item_id) return res.status(400).json({ error: '物品不能为空' });
         
-        const sql = `INSERT INTO item_sources (item_id, monster_id, map_id, drop_rate, notes) VALUES (?, ?, ?, ?, ?)`;
+        const sql = `INSERT INTO item_sources (item_id, map_id, drop_rate, notes) VALUES (?, ?, ?, ?)`;
         
-        db.run(sql, [item_id, monster_id, map_id || null, drop_rate || '', notes || ''], function(err) {
+        db.run(sql, [item_id, map_id || null, drop_rate || '', notes || ''], function(err) {
             if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID, message: '添加出处成功' });
+            res.json({ id: this.lastID, message: '创建成功' });
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -437,7 +429,7 @@ app.post('/api/monster-spawns', async (req, res) => {
         const { monster_id, map_id, spawn_point, refresh_time, notes } = req.body;
         
         if (!monster_id || !map_id) {
-            return res.status(400).json({ error: '怪物和地图必填' });
+            return res.status(400).json({ error: '武将和地图必填' });
         }
         
         const sql = `INSERT INTO monster_spawns (monster_id, map_id, spawn_point, refresh_time, notes) VALUES (?, ?, ?, ?, ?)`;
@@ -561,6 +553,80 @@ app.get('/api/stats', async (req, res) => {
                 stats[table] = count;
             });
             res.json(stats);
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+// 攻略相关API
+app.get('/api/guides', async (req, res) => {
+    try {
+        const db = getDB();
+        const { search } = req.query;
+        let query = 'SELECT * FROM guides WHERE 1=1';
+        const params = [];
+        
+        if (search) {
+            query += ' AND title LIKE ?';
+            params.push(`%${search}%`);
+        }
+        query += ' ORDER BY id DESC';
+        
+        db.all(query, params, (err, rows) => {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ data: rows, count: rows.length });
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/guides', async (req, res) => {
+    try {
+        const db = getDB();
+        const { title, content } = req.body;
+        
+        if (!title || !content) return res.status(400).json({ error: '标题和内容必填' });
+        
+        const sql = `INSERT INTO guides (title, content) VALUES (?, ?)`;
+        
+        db.run(sql, [title, content], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ id: this.lastID, message: '创建成功' });
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.put('/api/guides/:id', async (req, res) => {
+    try {
+        const db = getDB();
+        const { id } = req.params;
+        const { title, content } = req.body;
+        
+        if (!title || !content) return res.status(400).json({ error: '标题和内容必填' });
+        
+        const sql = `UPDATE guides SET title = ?, content = ? WHERE id = ?`;
+        
+        db.run(sql, [title, content, id], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ changes: this.changes, message: '更新成功' });
+        });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.delete('/api/guides/:id', async (req, res) => {
+    try {
+        const db = getDB();
+        const { id } = req.params;
+        
+        db.run('DELETE FROM guides WHERE id = ?', [id], function(err) {
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ message: '删除成功' });
         });
     } catch (err) {
         res.status(500).json({ error: err.message });

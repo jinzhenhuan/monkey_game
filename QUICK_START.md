@@ -46,7 +46,7 @@
 
 ### 步骤 5: 测试验证 [ ]
 - [ ] 访问后台：`https://game-query-frontend.pages.dev/admin.html`
-- [ ] 添加测试数据（地图、怪物、物品）
+- [ ] 添加测试数据（地图、武将、物品）
 - [ ] 访问前台：`https://game-query-frontend.pages.dev`
 - [ ] 查询物品，验证数据正确显示
 
