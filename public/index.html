@@ -1328,13 +1328,23 @@
                 
                 if (data.data && data.data.length > 0) {
                     guidesContent.innerHTML = data.data.map(guide => `
-                        <div class="info-card" style="margin-bottom: 10px; cursor: pointer;" onclick="showGuideDetail(${guide.id}, ${JSON.stringify(guide.title)}, ${JSON.stringify(guide.content)})">
+                        <div class="info-card" style="margin-bottom: 10px; cursor: pointer;" data-guide-id="${guide.id}" data-guide-title="${guide.title}" data-guide-content="${guide.content.replace(/"/g, '&quot;').replace(/\n/g, '\\n')}">
                             <h3 style="color: #2d3748; margin-bottom: 5px; display: flex; align-items: center;">
                                 <span style="margin-right: 8px;">📖</span>
                                 ${guide.title}
                             </h3>
                         </div>
                     `).join('');
+                    
+                    // 添加事件监听器
+                    document.querySelectorAll('.info-card[data-guide-id]').forEach(card => {
+                        card.addEventListener('click', function() {
+                            const id = parseInt(this.getAttribute('data-guide-id'));
+                            const title = this.getAttribute('data-guide-title');
+                            const content = this.getAttribute('data-guide-content').replace(/\\n/g, '\n');
+                            showGuideDetail(id, title, content);
+                        });
+                    });
                 } else {
                     guidesContent.innerHTML = '<p style="text-align: center; color: #a0aec0;">暂无攻略内容</p>';
                 }
