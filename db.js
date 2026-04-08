@@ -103,10 +103,43 @@ async function initializeTables() {
             if (err) {
                 console.error('❌ 表创建失败:', err.message);
                 reject(err);
-            } else {
-                console.log('✅ 数据表初始化完成');
-                resolve();
+                return;
             }
+            
+            // 更新物品表结构
+            db.run("ALTER TABLE items ADD COLUMN category TEXT", (err) => {
+                if (err && !err.message.includes("duplicate column name")) {
+                    console.log('添加 category 字段:', err.message);
+                }
+            });
+
+            db.run("ALTER TABLE items ADD COLUMN quality TEXT", (err) => {
+                if (err && !err.message.includes("duplicate column name")) {
+                    console.log('添加 quality 字段:', err.message);
+                }
+            });
+
+            // 更新怪物表结构
+            db.run("ALTER TABLE monsters ADD COLUMN force INTEGER", (err) => {
+                if (err && !err.message.includes("duplicate column name")) {
+                    console.log('添加 force 字段:', err.message);
+                }
+            });
+
+            db.run("ALTER TABLE monsters ADD COLUMN intelligence INTEGER", (err) => {
+                if (err && !err.message.includes("duplicate column name")) {
+                    console.log('添加 intelligence 字段:', err.message);
+                }
+            });
+
+            db.run("ALTER TABLE monsters ADD COLUMN speed INTEGER", (err) => {
+                if (err && !err.message.includes("duplicate column name")) {
+                    console.log('添加 speed 字段:', err.message);
+                }
+            });
+
+            console.log('✅ 数据表初始化完成');
+            resolve();
         });
     });
 }
