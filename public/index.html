@@ -1328,7 +1328,7 @@
                 
                 if (data.data && data.data.length > 0) {
                     guidesContent.innerHTML = data.data.map(guide => `
-                        <div class="info-card" style="margin-bottom: 10px; cursor: pointer;" onclick="showGuideDetail(${guide.id}, '${guide.title}', '${guide.content.replace(/'/g, "\'")}')">
+                        <div class="info-card" style="margin-bottom: 10px; cursor: pointer;" onclick="showGuideDetail(${guide.id}, ${JSON.stringify(guide.title)}, ${JSON.stringify(guide.content)})">
                             <h3 style="color: #2d3748; margin-bottom: 5px; display: flex; align-items: center;">
                                 <span style="margin-right: 8px;">📖</span>
                                 ${guide.title}
