@@ -867,8 +867,9 @@
                             <tr>
                                 <th>地图名称</th>
                                 <th>描述</th>
-                                <th>走法说明</th>
+                                <th>地图说明</th>
                                 <th>掉落物品</th>
+                                <th>武将</th>
                                 <th>操作</th>
                             </tr>
                         </thead>
@@ -1056,53 +1057,147 @@
             }
         }
 
+        // 存储不同类型的选择状态
+        let typeSelectionState = {
+            '装备': [],
+            '宝物': [],
+            '谋略': [],
+            '道具': [],
+            '武将': []
+        };
+        
+        // 初始化选择状态
+        function initSelectionState() {
+            // 先清空选择状态
+            typeSelectionState = {
+                '装备': [],
+                '宝物': [],
+                '谋略': [],
+                '道具': [],
+                '武将': []
+            };
+            
+            // 从隐藏字段加载已选择的物品和武将
+            const droppedItemsInput = document.getElementById('form-dropped-items');
+            const droppedMonstersInput = document.getElementById('form-dropped-monsters');
+            
+            if (droppedItemsInput) {
+                try {
+                    const droppedItems = JSON.parse(droppedItemsInput.value);
+                    // 根据物品类型分类
+                    cache.items.forEach(item => {
+                        if (droppedItems.some(id => id == item.id)) {
+                            if (typeSelectionState[item.type]) {
+                                typeSelectionState[item.type].push(item.id);
+                            }
+                        }
+                    });
+                } catch (e) {
+                    console.error('解析已选择物品失败:', e);
+                }
+            }
+            
+            if (droppedMonstersInput) {
+                try {
+                    const droppedMonsters = JSON.parse(droppedMonstersInput.value);
+                    typeSelectionState['武将'] = droppedMonsters;
+                } catch (e) {
+                    console.error('解析已选择武将失败:', e);
+                }
+            }
+        }
+        
         // 更新物品选项
         function updateItemOptions() {
             const typeSelect = document.getElementById('form-item-type');
             const container = document.getElementById('item-checkbox-container');
+            const label = document.getElementById('item-checkbox-label');
             const selectedType = typeSelect.value;
             
             // 清空现有内容
             container.innerHTML = '';
             
             if (!selectedType) {
+                label.textContent = '掉落物品（多选）';
                 container.innerHTML = '<p style="color: #a0aec0; text-align: center;">请先选择物品类型</p>';
                 return;
             }
             
-            // 过滤物品
-            const filteredItems = cache.items.filter(item => item.type === selectedType);
-            
-            if (filteredItems.length === 0) {
-                container.innerHTML = '<p style="color: #a0aec0; text-align: center;">该类型下暂无物品</p>';
-                return;
-            }
-            
-            // 获取已选择的掉落物品
-            let selectedItems = [];
-            const droppedItemsInput = document.getElementById('form-dropped-items');
-            if (droppedItemsInput) {
-                try {
-                    selectedItems = JSON.parse(droppedItemsInput.value);
-                } catch (e) {
-                    selectedItems = [];
+            // 处理武将类型
+            if (selectedType === '武将') {
+                label.textContent = '武将（可多选）';
+                
+                if (cache.monsters.length === 0) {
+                    container.innerHTML = '<p style="color: #a0aec0; text-align: center;">暂无武将数据</p>';
+                    return;
                 }
+                
+                // 生成复选框
+                cache.monsters.forEach(monster => {
+                    const checkbox = document.createElement('div');
+                    checkbox.style.display = 'flex';
+                    checkbox.style.alignItems = 'center';
+                    checkbox.style.marginBottom = '8px';
+                    const checked = typeSelectionState['武将'].some(id => id == monster.id) ? 'checked' : '';
+                    checkbox.innerHTML = `
+                        <input type="checkbox" id="monster-${monster.id}" value="${monster.id}" ${checked} style="margin-right: 8px;">
+                        <label for="monster-${monster.id}">${monster.name}</label>
+                    `;
+                    container.appendChild(checkbox);
+                });
+            } else {
+                // 处理物品类型
+                label.textContent = '掉落物品（多选）';
+                
+                // 过滤物品
+                const filteredItems = cache.items.filter(item => item.type === selectedType);
+                
+                if (filteredItems.length === 0) {
+                    container.innerHTML = '<p style="color: #a0aec0; text-align: center;">该类型下暂无物品</p>';
+                    return;
+                }
+                
+                // 生成复选框
+                filteredItems.forEach(item => {
+                    const checkbox = document.createElement('div');
+                    checkbox.style.display = 'flex';
+                    checkbox.style.alignItems = 'center';
+                    checkbox.style.marginBottom = '8px';
+                    const checked = typeSelectionState[selectedType].some(id => id == item.id) ? 'checked' : '';
+                    checkbox.innerHTML = `
+                        <input type="checkbox" id="item-${item.id}" value="${item.id}" ${checked} style="margin-right: 8px;">
+                        <label for="item-${item.id}">${item.name}</label>
+                    `;
+                    container.appendChild(checkbox);
+                });
+            }
+        }
+        
+        // 保存当前类型的选择
+        function saveCurrentTypeSelection(type) {
+            const container = document.getElementById('item-checkbox-container');
+            const checkboxes = container.querySelectorAll('input[type="checkbox"]:checked');
+            const selectedIds = Array.from(checkboxes).map(checkbox => parseInt(checkbox.value));
+            
+            typeSelectionState[type] = selectedIds;
+        }
+        
+        // 处理类型切换
+        let currentType = '';
+        function handleTypeChange() {
+            const typeSelect = document.getElementById('form-item-type');
+            const newType = typeSelect.value;
+            
+            // 保存当前类型的选择
+            if (currentType) {
+                saveCurrentTypeSelection(currentType);
             }
             
-            // 生成复选框
-            filteredItems.forEach(item => {
-                const checkbox = document.createElement('div');
-                checkbox.style.display = 'flex';
-                checkbox.style.alignItems = 'center';
-                checkbox.style.marginBottom = '8px';
-                // 使用宽松相等或者将ID转换为数字进行比较
-                const checked = selectedItems.some(id => id == item.id) ? 'checked' : '';
-                checkbox.innerHTML = `
-                    <input type="checkbox" id="item-${item.id}" value="${item.id}" ${checked} style="margin-right: 8px;">
-                    <label for="item-${item.id}">${item.name}</label>
-                `;
-                container.appendChild(checkbox);
-            });
+            // 更新当前类型
+            currentType = newType;
+            
+            // 加载新类型的选择
+            updateItemOptions();
         }
 
         // 初始化
@@ -1252,24 +1347,43 @@
                 const res = await fetch(`${API_BASE}/maps?search=${search}`);
                 const data = await res.json();
                 
-                // 获取每个地图的掉落物品
-                const mapsWithItems = await Promise.all(data.data.map(async (map) => {
+                // 获取每个地图的掉落物品和武将
+                const mapsWithData = await Promise.all(data.data.map(async (map) => {
+                    // 获取掉落物品
                     const sourcesRes = await fetch(`${API_BASE}/item-sources`);
                     const sourcesData = await sourcesRes.json();
                     const mapItems = sourcesData.data
                         .filter(source => source.map_id === map.id);
                     const droppedItems = mapItems.map(source => source.item_id);
                     const droppedItemNames = mapItems.map(source => source.item_name);
-                    return { ...map, droppedItems, droppedItemNames };
+                    
+                    // 获取掉落武将
+                    const spawnsRes = await fetch(`${API_BASE}/monster-spawns`);
+                    const spawnsData = await spawnsRes.json();
+                    const mapSpawns = spawnsData.data
+                        .filter(spawn => spawn.map_id === map.id);
+                    const droppedMonsters = mapSpawns.map(spawn => spawn.monster_id);
+                    const droppedMonsterNames = mapSpawns.map(spawn => spawn.monster_name);
+                    
+                    return { 
+                        ...map, 
+                        droppedItems, 
+                        droppedItemNames,
+                        droppedMonsters,
+                        droppedMonsterNames
+                    };
                 }));
                 
-                cache.maps = mapsWithItems;
+                cache.maps = mapsWithData;
                 
                 const tbody = document.getElementById('maps-table-body');
-                tbody.innerHTML = mapsWithItems.map(m => {
+                tbody.innerHTML = mapsWithData.map(m => {
                     const items = m.droppedItemNames || [];
+                    const monsters = m.droppedMonsterNames || [];
                     const displayItems = items.slice(0, 2).join(', ');
                     const tooltipItems = items.join(', ');
+                    const displayMonsters = monsters.slice(0, 2).join(', ');
+                    const tooltipMonsters = monsters.join(', ');
                     return `
                         <tr>
                             <td><strong>${m.name}</strong></td>
@@ -1278,6 +1392,11 @@
                             <td>
                                 <span ${items.length > 2 ? `title="${tooltipItems}"` : ''} style="cursor: ${items.length > 2 ? 'pointer' : 'default'}">
                                     ${items.length > 0 ? displayItems + (items.length > 2 ? '...' : '') : '-'}
+                                </span>
+                            </td>
+                            <td>
+                                <span ${monsters.length > 2 ? `title="${tooltipMonsters}"` : ''} style="cursor: ${monsters.length > 2 ? 'pointer' : 'default'}">
+                                    ${monsters.length > 0 ? displayMonsters + (monsters.length > 2 ? '...' : '') : '-'}
                                 </span>
                             </td>
                             <td>
@@ -1422,21 +1541,44 @@
             }
             
             // 初始化地图编辑的物品类型和掉落物品
-            if (type === 'map' && id) {
+            if (type === 'map') {
                 setTimeout(() => {
-                    const map = cache.maps.find(m => m.id === id);
-                    if (map && map.droppedItems && map.droppedItems.length > 0) {
-                        // 获取第一个掉落物品的类型
-                        const firstItemId = map.droppedItems[0];
-                        const firstItem = cache.items.find(i => i.id === firstItemId);
-                        if (firstItem && firstItem.type) {
-                            // 设置物品类型下拉框
-                            const typeSelect = document.getElementById('form-item-type');
-                            if (typeSelect) {
-                                typeSelect.value = firstItem.type;
-                                // 触发onchange事件来加载物品选项
-                                updateItemOptions();
+                    if (id) {
+                        // 编辑现有地图，加载已保存的选择
+                        initSelectionState();
+                        
+                        const map = cache.maps.find(m => m.id === id);
+                        if (map && map.droppedItems && map.droppedItems.length > 0) {
+                            // 获取第一个掉落物品的类型
+                            const firstItemId = map.droppedItems[0];
+                            const firstItem = cache.items.find(i => i.id === firstItemId);
+                            if (firstItem && firstItem.type) {
+                                // 设置物品类型下拉框
+                                const typeSelect = document.getElementById('form-item-type');
+                                if (typeSelect) {
+                                    typeSelect.value = firstItem.type;
+                                    // 设置currentType变量
+                                    currentType = firstItem.type;
+                                    // 触发onchange事件来加载物品选项
+                                    updateItemOptions();
+                                }
                             }
+                        }
+                    } else {
+                        // 添加新地图，重置选择状态
+                        typeSelectionState = {
+                            '装备': [],
+                            '宝物': [],
+                            '谋略': [],
+                            '道具': [],
+                            '武将': []
+                        };
+                        currentType = '';
+                        // 重置物品类型下拉框
+                        const typeSelect = document.getElementById('form-item-type');
+                        if (typeSelect) {
+                            typeSelect.value = '';
+                            updateItemOptions();
                         }
                     }
                 }, 100);
@@ -1552,27 +1694,29 @@
                         <input type="text" class="form-input" id="form-description" value="${m.description || ''}" placeholder="地图简介">
                     </div>
                     <div class="form-group">
-                        <label class="form-label">走法说明 <span style="color: #a0aec0; font-weight: normal;">（从上一张地图如何走到这里）</span></label>
+                        <label class="form-label">地图说明 <span style="color: #a0aec0; font-weight: normal;">（从上一张地图如何走到这里）</span></label>
                         <textarea class="form-textarea" id="form-route" placeholder="如：从祖玛四层(45,78)→上→上→左→右→下→祖玛五层">${m.route_description || ''}</textarea>
                         <p class="form-hint">支持方向键：上、下、左、右，或坐标如 (125,80)</p>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">物品类型</label>
-                        <select class="form-select" id="form-item-type" onchange="updateItemOptions()">
+                        <label class="form-label">物品类型及武将</label>
+                        <select class="form-select" id="form-item-type" onchange="handleTypeChange()">
                             <option value="">请选择物品类型</option>
                             <option value="装备">装备</option>
                             <option value="宝物">宝物</option>
                             <option value="谋略">谋略</option>
                             <option value="道具">道具</option>
+                            <option value="武将">武将</option>
                         </select>
                     </div>
                     <div class="form-group">
-                        <label class="form-label">掉落物品（多选）</label>
+                        <label class="form-label" id="item-checkbox-label">掉落物品（多选）</label>
                         <div id="item-checkbox-container" style="max-height: 300px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px;">
                             <p style="color: #a0aec0; text-align: center;">请先选择物品类型</p>
                         </div>
                     </div>
                     <input type="hidden" id="form-dropped-items" value="${m.droppedItems ? JSON.stringify(m.droppedItems) : '[]'}">
+                    <input type="hidden" id="form-dropped-monsters" value="${m.droppedMonsters ? JSON.stringify(m.droppedMonsters) : '[]'}">
                 `;
             }
             
@@ -1734,17 +1878,28 @@
                     description: document.getElementById('form-description').value
                 };
             } else if (type === 'map') {
-                // 收集选中的物品
+                // 保存当前类型的选择
+                const typeSelect = document.getElementById('form-item-type');
+                const selectedType = typeSelect.value;
+                if (selectedType) {
+                    saveCurrentTypeSelection(selectedType);
+                }
+                
+                // 收集所有类型的选择
                 const selectedItems = [];
-                document.querySelectorAll('#item-checkbox-container input[type="checkbox"]:checked').forEach(checkbox => {
-                    selectedItems.push(parseInt(checkbox.value));
+                const selectedMonsters = typeSelectionState['武将'];
+                
+                // 收集所有物品类型的选择
+                ['装备', '宝物', '谋略', '道具'].forEach(type => {
+                    selectedItems.push(...typeSelectionState[type]);
                 });
                 
                 data = {
                     name: document.getElementById('form-name').value,
                     description: document.getElementById('form-description').value,
                     route_description: document.getElementById('form-route').value,
-                    dropped_items: selectedItems
+                    dropped_items: selectedItems,
+                    dropped_monsters: selectedMonsters
                 };
             } else if (type === 'source') {
                 // 收集选中的地图

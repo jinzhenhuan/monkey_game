@@ -1072,7 +1072,7 @@
                         <div class="source-item" onclick="selectMapById(${s.map_id})">
                             <div class="source-header">
                                 <span class="source-monster">🗺️ ${s.map_name}</span>
-                                <span class="source-rate">${s.spawn_point || '随机'}</span>
+                                ${s.spawn_point ? `<span class="source-rate">${s.spawn_point}</span>` : ''}
                             </div>
                             ${s.refresh_time ? `<div style="font-size: 12px; color: #718096;">刷新: ${s.refresh_time}分钟</div>` : ''}
                             ${s.notes ? `<div style="font-size: 12px; color: #718096; margin-top: 4px;">${s.notes}</div>` : ''}
@@ -1144,8 +1144,9 @@
             const map = allMaps.find(m => m.id === id);
             if (!map) return;
             
-            // 获取地图掉落物品
-            let droppedItemsHtml = '';
+            // 获取地图掉落物品和地图武将
+            let droppedItems = [];
+            let droppedMonsters = [];
             try {
                 // 先获取所有物品信息
                 const itemsRes = await fetch(`${API_BASE}/items`);
@@ -1155,9 +1156,10 @@
                     allItemsMap[item.id] = item;
                 });
                 
-                const res = await fetch(`${API_BASE}/item-sources`);
-                const data = await res.json();
-                const mapItems = data.data
+                // 获取掉落物品
+                const sourcesRes = await fetch(`${API_BASE}/item-sources`);
+                const sourcesData = await sourcesRes.json();
+                droppedItems = sourcesData.data
                     .filter(source => source.map_id === map.id)
                     .map(source => {
                         const item = allItemsMap[source.item_id];
@@ -1167,21 +1169,18 @@
                         };
                     });
                 
-                if (mapItems.length > 0) {
-                    droppedItemsHtml = `
-                        <div style="margin-top: 16px;">
-                            <h4 style="margin: 0 12px 12px; color: #2d3748; font-size: 14px;">🎁 掉落物品：</h4>
-                            <div style="padding: 12px; background: #f7fafc; border-radius: 8px;">
-                                ${mapItems.map(item => {
-                                    const qualityStyle = item.quality ? getQualityColor(item.quality) : '';
-                                    return `<div style="padding: 4px 0; ${qualityStyle}">${item.name}</div>`;
-                                }).join('')}
-                            </div>
-                        </div>
-                    `;
-                }
+                // 获取地图武将
+                const spawnsRes = await fetch(`${API_BASE}/monster-spawns`);
+                const spawnsData = await spawnsRes.json();
+                droppedMonsters = spawnsData.data
+                    .filter(spawn => spawn.map_id === map.id)
+                    .map(spawn => {
+                        return {
+                            name: spawn.monster_name
+                        };
+                    });
             } catch (err) {
-                console.error('加载掉落物品失败:', err);
+                console.error('加载掉落物品和地图武将失败:', err);
             }
             
             // 渲染地图详情
@@ -1193,11 +1192,29 @@
                     </div>
                     ${map.route_description ? `
                         <div style="margin-top: 16px;">
-                            <h4 style="margin: 0 12px 12px; color: #2d3748; font-size: 14px;">📍 走法说明：</h4>
+                            <h4 style="margin: 0 12px 12px; color: #2d3748; font-size: 14px;">📍 地图说明：</h4>
                             <div class="route-box">${formatRoute(map.route_description)}</div>
                         </div>
-                    ` : '<div class="empty-state" style="padding: 40px;"><p>暂无走法说明</p></div>'}
-                    ${droppedItemsHtml}
+                    ` : '<div class="empty-state" style="padding: 40px;"><p>暂无地图说明</p></div>'}
+                    <div style="margin-top: 16px; display: flex; gap: 16px;">
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0 12px 12px; color: #2d3748; font-size: 14px;">🎁 掉落物品：</h4>
+                            <div style="padding: 12px; background: #f7fafc; border-radius: 8px; min-height: 100px;">
+                                ${droppedItems.length > 0 ? droppedItems.map(item => {
+                                    const qualityStyle = item.quality ? getQualityColor(item.quality) : '';
+                                    return `<div style="padding: 4px 0; ${qualityStyle}">${item.name}</div>`;
+                                }).join('') : '<p style="color: #a0aec0; text-align: center;">无掉落物品</p>'}
+                            </div>
+                        </div>
+                        <div style="flex: 1;">
+                            <h4 style="margin: 0 12px 12px; color: #2d3748; font-size: 14px;">👥 地图武将：</h4>
+                            <div style="padding: 12px; background: #f7fafc; border-radius: 8px; min-height: 100px;">
+                                ${droppedMonsters.length > 0 ? droppedMonsters.map(monster => {
+                                    return `<div style="padding: 4px 0;">${monster.name}</div>`;
+                                }).join('') : '<p style="color: #a0aec0; text-align: center;">无地图武将</p>'}
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
             

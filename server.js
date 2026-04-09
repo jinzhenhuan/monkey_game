@@ -117,11 +117,17 @@ app.post('/api/items', async (req, res) => {
         
         if (!name) return res.status(400).json({ error: '物品名称必填' });
         
-        const sql = `INSERT INTO items (name, type, category, quality, description, level_requirement) VALUES (?, ?, ?, ?, ?, ?)`;
-        
-        db.run(sql, [name, type || '', category || '', quality || '', description || '', level_requirement || 0], function(err) {
+        // 检查名称是否已存在
+        db.get('SELECT id FROM items WHERE name = ?', [name], (err, row) => {
             if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID, message: '创建成功' });
+            if (row) return res.status(400).json({ error: '该物品已存在' });
+            
+            const sql = `INSERT INTO items (name, type, category, quality, description, level_requirement) VALUES (?, ?, ?, ?, ?, ?)`;
+            
+            db.run(sql, [name, type || '', category || '', quality || '', description || '', level_requirement || 0], function(err) {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ id: this.lastID, message: '创建成功' });
+            });
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -134,11 +140,18 @@ app.put('/api/items/:id', async (req, res) => {
         const { id } = req.params;
         const { name, type, category, quality, description, level_requirement } = req.body;
         
-        const sql = `UPDATE items SET name = ?, type = ?, category = ?, quality = ?, description = ?, level_requirement = ? WHERE id = ?`;
-        
-        db.run(sql, [name, type, category, quality, description, level_requirement, id], function(err) {
+        // 检查名称是否已存在（排除当前物品）
+        db.get('SELECT id FROM items WHERE name = ? AND id != ?', [name, id], (err, row) => {
             if (err) return res.status(500).json({ error: err.message });
-            res.json({ changes: this.changes, message: '更新成功' });
+            if (row) return res.status(400).json({ error: '该物品已存在' });
+
+            
+            const sql = `UPDATE items SET name = ?, type = ?, category = ?, quality = ?, description = ?, level_requirement = ? WHERE id = ?`;
+            
+            db.run(sql, [name, type, category, quality, description, level_requirement, id], function(err) {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ changes: this.changes, message: '更新成功' });
+            });
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -221,11 +234,17 @@ app.post('/api/monsters', async (req, res) => {
         
         if (!name) return res.status(400).json({ error: '武将名称必填' });
         
-        const sql = `INSERT INTO monsters (name, general_trait, force, attack, intelligence, speed, description) VALUES (?, ?, ?, ?, ?, ?, ?)`;
-        
-        db.run(sql, [name, general_trait || '', force || 100, attack || 10, intelligence || 5, speed || 5, description || ''], function(err) {
+        // 检查名称是否已存在
+        db.get('SELECT id FROM monsters WHERE name = ?', [name], (err, row) => {
             if (err) return res.status(500).json({ error: err.message });
-            res.json({ id: this.lastID, message: '创建成功' });
+            if (row) return res.status(400).json({ error: '该武将已存在' });
+            
+            const sql = `INSERT INTO monsters (name, general_trait, force, attack, intelligence, speed, description) VALUES (?, ?, ?, ?, ?, ?, ?)`;
+            
+            db.run(sql, [name, general_trait || '', force || 100, attack || 10, intelligence || 5, speed || 5, description || ''], function(err) {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ id: this.lastID, message: '创建成功' });
+            });
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -238,11 +257,18 @@ app.put('/api/monsters/:id', async (req, res) => {
         const { id } = req.params;
         const { name, general_trait, force, attack, intelligence, speed, description } = req.body;
         
-        const sql = `UPDATE monsters SET name = ?, general_trait = ?, force = ?, attack = ?, intelligence = ?, speed = ?, description = ? WHERE id = ?`;
-        
-        db.run(sql, [name, general_trait, force, attack, intelligence, speed, description, id], function(err) {
+        // 检查名称是否已存在（排除当前武将）
+        db.get('SELECT id FROM monsters WHERE name = ? AND id != ?', [name, id], (err, row) => {
             if (err) return res.status(500).json({ error: err.message });
-            res.json({ changes: this.changes, message: '更新成功' });
+            if (row) return res.status(400).json({ error: '该武将已存在' });
+
+            
+            const sql = `UPDATE monsters SET name = ?, general_trait = ?, force = ?, attack = ?, intelligence = ?, speed = ?, description = ? WHERE id = ?`;
+            
+            db.run(sql, [name, general_trait, force, attack, intelligence, speed, description, id], function(err) {
+                if (err) return res.status(500).json({ error: err.message });
+                res.json({ changes: this.changes, message: '更新成功' });
+            });
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -304,48 +330,81 @@ app.get('/api/maps/:id', async (req, res) => {
 app.post('/api/maps', async (req, res) => {
     try {
         const db = getDB();
-        const { name, description, route_description, dropped_items } = req.body;
+        const { name, description, route_description, dropped_items, dropped_monsters } = req.body;
         
         if (!name) return res.status(400).json({ error: '地图名称必填' });
         
-        db.run('BEGIN TRANSACTION');
-        
-        const sql = `INSERT INTO maps (name, description, route_description) VALUES (?, ?, ?)`;
-        
-        db.run(sql, [name, description || '', route_description || ''], function(err) {
-            if (err) {
-                db.run('ROLLBACK');
-                return res.status(500).json({ error: err.message });
-            }
+        // 检查名称是否已存在
+        db.get('SELECT id FROM maps WHERE name = ?', [name], (err, row) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (row) return res.status(400).json({ error: '该地图已存在' });
             
-            const mapId = this.lastID;
+            db.run('BEGIN TRANSACTION');
             
-            // 处理物品掉落
-            if (dropped_items && dropped_items.length > 0) {
-                const insertSourceSql = `INSERT INTO item_sources (item_id, map_id) VALUES (?, ?)`;
+            const sql = `INSERT INTO maps (name, description, route_description) VALUES (?, ?, ?)`;
+            
+            db.run(sql, [name, description || '', route_description || ''], function(err) {
+                if (err) {
+                    db.run('ROLLBACK');
+                    return res.status(500).json({ error: err.message });
+                }
                 
-                let completed = 0;
+                const mapId = this.lastID;
+                
+                let totalOperations = 0;
+                let completedOperations = 0;
                 let hasError = false;
                 
-                dropped_items.forEach(itemId => {
-                    db.run(insertSourceSql, [itemId, mapId], function(err) {
-                        if (err) {
-                            hasError = true;
-                            db.run('ROLLBACK');
-                            return res.status(500).json({ error: err.message });
-                        }
-                        
-                        completed++;
-                        if (completed === dropped_items.length) {
-                            db.run('COMMIT');
-                            res.json({ id: mapId, message: '创建成功' });
-                        }
+                // 处理物品掉落
+                if (dropped_items && dropped_items.length > 0) {
+                    totalOperations += dropped_items.length;
+                    const insertSourceSql = `INSERT INTO item_sources (item_id, map_id) VALUES (?, ?)`;
+                    
+                    dropped_items.forEach(itemId => {
+                        db.run(insertSourceSql, [itemId, mapId], function(err) {
+                            if (err) {
+                                hasError = true;
+                                db.run('ROLLBACK');
+                                return res.status(500).json({ error: err.message });
+                            }
+                            
+                            completedOperations++;
+                            if (completedOperations === totalOperations) {
+                                db.run('COMMIT');
+                                res.json({ id: mapId, message: '创建成功' });
+                            }
+                        });
                     });
-                });
-            } else {
-                db.run('COMMIT');
-                res.json({ id: mapId, message: '创建成功' });
-            }
+                }
+                
+                // 处理武将出现
+                if (dropped_monsters && dropped_monsters.length > 0) {
+                    totalOperations += dropped_monsters.length;
+                    const insertSpawnSql = `INSERT INTO monster_spawns (monster_id, map_id) VALUES (?, ?)`;
+                    
+                    dropped_monsters.forEach(monsterId => {
+                        db.run(insertSpawnSql, [monsterId, mapId], function(err) {
+                            if (err) {
+                                hasError = true;
+                                db.run('ROLLBACK');
+                                return res.status(500).json({ error: err.message });
+                            }
+                            
+                            completedOperations++;
+                            if (completedOperations === totalOperations) {
+                                db.run('COMMIT');
+                                res.json({ id: mapId, message: '创建成功' });
+                            }
+                        });
+                    });
+                }
+                
+                // 如果没有任何操作需要执行
+                if (totalOperations === 0) {
+                    db.run('COMMIT');
+                    res.json({ id: mapId, message: '创建成功' });
+                }
+            });
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
@@ -356,51 +415,93 @@ app.put('/api/maps/:id', async (req, res) => {
     try {
         const db = getDB();
         const { id } = req.params;
-        const { name, description, route_description, dropped_items } = req.body;
+        const { name, description, route_description, dropped_items, dropped_monsters } = req.body;
         
-        db.run('BEGIN TRANSACTION');
-        
-        const sql = `UPDATE maps SET name = ?, description = ?, route_description = ? WHERE id = ?`;
-        
-        db.run(sql, [name, description, route_description, id], function(err) {
-            if (err) {
-                db.run('ROLLBACK');
-                return res.status(500).json({ error: err.message });
-            }
+        // 检查名称是否已存在（排除当前地图）
+        db.get('SELECT id FROM maps WHERE name = ? AND id != ?', [name, id], (err, row) => {
+            if (err) return res.status(500).json({ error: err.message });
+            if (row) return res.status(400).json({ error: '该地图已存在' });
+
             
-            // 删除旧的物品掉落关联
-            db.run('DELETE FROM item_sources WHERE map_id = ?', [id], function(err) {
+            db.run('BEGIN TRANSACTION');
+            
+            const sql = `UPDATE maps SET name = ?, description = ?, route_description = ? WHERE id = ?`;
+            
+            db.run(sql, [name, description, route_description, id], function(err) {
                 if (err) {
                     db.run('ROLLBACK');
                     return res.status(500).json({ error: err.message });
                 }
                 
-                // 处理新的物品掉落
-                if (dropped_items && dropped_items.length > 0) {
-                    const insertSourceSql = `INSERT INTO item_sources (item_id, map_id) VALUES (?, ?)`;
+                // 删除旧的物品掉落关联
+                db.run('DELETE FROM item_sources WHERE map_id = ?', [id], function(err) {
+                    if (err) {
+                        db.run('ROLLBACK');
+                        return res.status(500).json({ error: err.message });
+                    }
                     
-                    let completed = 0;
-                    let hasError = false;
-                    
-                    dropped_items.forEach(itemId => {
-                        db.run(insertSourceSql, [itemId, id], function(err) {
-                            if (err) {
-                                hasError = true;
-                                db.run('ROLLBACK');
-                                return res.status(500).json({ error: err.message });
-                            }
+                    // 删除旧的武将出现关联
+                    db.run('DELETE FROM monster_spawns WHERE map_id = ?', [id], function(err) {
+                        if (err) {
+                            db.run('ROLLBACK');
+                            return res.status(500).json({ error: err.message });
+                        }
+                        
+                        let totalOperations = 0;
+                        let completedOperations = 0;
+                        let hasError = false;
+                        
+                        // 处理新的物品掉落
+                        if (dropped_items && dropped_items.length > 0) {
+                            totalOperations += dropped_items.length;
+                            const insertSourceSql = `INSERT INTO item_sources (item_id, map_id) VALUES (?, ?)`;
                             
-                            completed++;
-                            if (completed === dropped_items.length) {
-                                db.run('COMMIT');
-                                res.json({ changes: 1, message: '更新成功' });
-                            }
-                        });
+                            dropped_items.forEach(itemId => {
+                                db.run(insertSourceSql, [itemId, id], function(err) {
+                                    if (err) {
+                                        hasError = true;
+                                        db.run('ROLLBACK');
+                                        return res.status(500).json({ error: err.message });
+                                    }
+                                    
+                                    completedOperations++;
+                                    if (completedOperations === totalOperations) {
+                                        db.run('COMMIT');
+                                        res.json({ changes: 1, message: '更新成功' });
+                                    }
+                                });
+                            });
+                        }
+                        
+                        // 处理新的武将出现
+                        if (dropped_monsters && dropped_monsters.length > 0) {
+                            totalOperations += dropped_monsters.length;
+                            const insertSpawnSql = `INSERT INTO monster_spawns (monster_id, map_id) VALUES (?, ?)`;
+                            
+                            dropped_monsters.forEach(monsterId => {
+                                db.run(insertSpawnSql, [monsterId, id], function(err) {
+                                    if (err) {
+                                        hasError = true;
+                                        db.run('ROLLBACK');
+                                        return res.status(500).json({ error: err.message });
+                                    }
+                                    
+                                    completedOperations++;
+                                    if (completedOperations === totalOperations) {
+                                        db.run('COMMIT');
+                                        res.json({ changes: 1, message: '更新成功' });
+                                    }
+                                });
+                            });
+                        }
+                        
+                        // 如果没有任何操作需要执行
+                        if (totalOperations === 0) {
+                            db.run('COMMIT');
+                            res.json({ changes: 1, message: '更新成功' });
+                        }
                     });
-                } else {
-                    db.run('COMMIT');
-                    res.json({ changes: 1, message: '更新成功' });
-                }
+                });
             });
         });
     } catch (err) {
