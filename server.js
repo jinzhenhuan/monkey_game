@@ -514,9 +514,33 @@ app.delete('/api/maps/:id', async (req, res) => {
         const db = getDB();
         const { id } = req.params;
         
-        db.run('DELETE FROM maps WHERE id = ?', [id], function(err) {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ message: '删除成功' });
+        db.run('BEGIN TRANSACTION');
+        
+        // 先删除相关的物品出处记录
+        db.run('DELETE FROM item_sources WHERE map_id = ?', [id], function(err) {
+            if (err) {
+                db.run('ROLLBACK');
+                return res.status(500).json({ error: err.message });
+            }
+            
+            // 再删除相关的武将刷新点记录
+            db.run('DELETE FROM monster_spawns WHERE map_id = ?', [id], function(err) {
+                if (err) {
+                    db.run('ROLLBACK');
+                    return res.status(500).json({ error: err.message });
+                }
+                
+                // 最后删除地图记录
+                db.run('DELETE FROM maps WHERE id = ?', [id], function(err) {
+                    if (err) {
+                        db.run('ROLLBACK');
+                        return res.status(500).json({ error: err.message });
+                    }
+                    
+                    db.run('COMMIT');
+                    res.json({ message: '删除成功' });
+                });
+            });
         });
     } catch (err) {
         res.status(500).json({ error: err.message });
