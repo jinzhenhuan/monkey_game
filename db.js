@@ -42,6 +42,7 @@ async function initializeTables() {
         CREATE TABLE IF NOT EXISTS monsters (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             name TEXT NOT NULL,
+            general_trait TEXT,
             force INTEGER DEFAULT 100,
             attack INTEGER DEFAULT 10,
             intelligence INTEGER DEFAULT 5,
@@ -79,16 +80,7 @@ async function initializeTables() {
             FOREIGN KEY (map_id) REFERENCES maps(id)
         );
         
-        CREATE TABLE IF NOT EXISTS npcs (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            name TEXT NOT NULL,
-            map_id INTEGER,
-            position TEXT,
-            function TEXT,
-            dialogue TEXT,
-            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-            FOREIGN KEY (map_id) REFERENCES maps(id)
-        );
+
         
         CREATE TABLE IF NOT EXISTS guides (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -135,6 +127,12 @@ async function initializeTables() {
             db.run("ALTER TABLE monsters ADD COLUMN speed INTEGER", (err) => {
                 if (err && !err.message.includes("duplicate column name")) {
                     console.log('添加 speed 字段:', err.message);
+                }
+            });
+
+            db.run("ALTER TABLE monsters ADD COLUMN general_trait TEXT", (err) => {
+                if (err && !err.message.includes("duplicate column name")) {
+                    console.log('添加 general_trait 字段:', err.message);
                 }
             });
 

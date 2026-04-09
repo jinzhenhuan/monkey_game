@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小猴子游戏 - 游戏查询系统</title>
+    <title>吞食天地梦幻版 - 游戏查询系统</title>
     <style>
         * {
             margin: 0;
@@ -137,8 +137,11 @@
 
         .content-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 20px;
+            justify-content: center;
+            max-width: 1200px;
+            margin: 0 auto;
         }
 
         /* Map and NPC Grid */
@@ -606,7 +609,7 @@
         <div class="logo-section">
             <div class="logo">🐒</div>
             <div class="logo-text">
-                <h1>小猴子游戏</h1>
+                <h1>吞食天地梦幻版</h1>
                 <span>查询系统</span>
             </div>
         </div>
@@ -617,7 +620,6 @@
             <button class="nav-tab active" onclick="switchTab('items')">物品查询</button>
             <button class="nav-tab" onclick="switchTab('monsters')">武将查询</button>
             <button class="nav-tab" onclick="switchTab('maps')">地图查询</button>
-            <button class="nav-tab" onclick="switchTab('npcs')">NPC查询</button>
             <button class="nav-tab" onclick="switchTab('guides')">查看攻略</button>
         </nav>
 
@@ -671,21 +673,7 @@
                     </div>
                 </div>
 
-                <!-- 刷新地图 -->
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">
-                            <div class="panel-icon">🗺️</div>
-                            刷新地图
-                        </div>
-                    </div>
-                    <div class="panel-content" id="refreshMap">
-                        <div class="empty-state">
-                            <div class="empty-icon">ℹ️</div>
-                            <p>选择武将查看刷新地图</p>
-                        </div>
-                    </div>
-                </div>
+
 
                 <!-- 地图走法 -->
                 <div class="panel">
@@ -748,7 +736,7 @@
                     <div class="panel-header">
                         <div class="panel-title">
                             <div class="panel-icon">🗺️</div>
-                            刷新位置
+                            出现关卡
                         </div>
                     </div>
                     <div class="panel-content" id="monsterSpawns">
@@ -817,46 +805,7 @@
             </div>
         </div>
 
-        <!-- NPC查询 -->
-        <div id="npcs-tab" class="tab-content">
-            <div class="content-grid npc-grid">
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">
-                            <div class="panel-icon">🧙</div>
-                            NPC列表
-                        </div>
-                        <div class="panel-stats">
-                            <span class="stat-badge green" id="npc-count">加载中...</span>
-                        </div>
-                    </div>
-                    <div class="panel-search">
-                        <input type="text" class="search-input" placeholder="请输入NPC名过滤" id="npcSearch" oninput="filterNpcs()">
-                    </div>
-                    <div class="panel-content" id="npcList">
-                        <div class="loading-state">
-                            <div class="spinner"></div>
-                            <p>加载中...</p>
-                        </div>
-                    </div>
-                </div>
 
-                <div class="panel">
-                    <div class="panel-header">
-                        <div class="panel-title">
-                            <div class="panel-icon">📋</div>
-                            NPC信息
-                        </div>
-                    </div>
-                    <div class="panel-content" id="npcDetail">
-                        <div class="empty-state">
-                            <div class="empty-icon">ℹ️</div>
-                            <p>请从左边选择NPC查看详情</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
 
         <!-- 查看攻略 -->
         <div id="guides-tab" class="tab-content">
@@ -901,12 +850,10 @@
         let allItems = [];
         let allMonsters = [];
         let allMaps = [];
-        let allNpcs = [];
         
         let selectedItem = null;
         let selectedMonster = null;
         let selectedMap = null;
-        let selectedNpc = null;
 
         // 初始化加载数据
         document.addEventListener('DOMContentLoaded', function() {
@@ -918,8 +865,7 @@
             await Promise.all([
                 loadItems(),
                 loadMonsters(),
-                loadMaps(),
-                loadNpcs()
+                loadMaps()
             ]);
         }
 
@@ -951,7 +897,7 @@
                 const typeName = item.type ? (categoryName !== '其他' ? `${item.type}·${categoryName}` : item.type) : categoryName;
                 const qualityColor = item.quality ? getQualityColor(item.quality) : '';
                 return `
-                    <div class="list-item ${selectedItem === item.id ? 'active' : ''}" onclick="selectItem(${item.id})"><div class="item-number">${item.id}</div>
+                    <div class="list-item ${selectedItem === item.id ? 'active' : ''}" onclick="selectItem(${item.id})">
                         <div style="flex: 1;">
                             <div class="item-name" style="${qualityColor}">
                                 ${item.name}
@@ -1014,9 +960,6 @@
                             <h4 style="margin: 16px 12px 12px; color: #2d3748; font-size: 14px;">物品出处：</h4>
                             ${detail.sources.map(s => `
                                 <div class="source-item" ${s.map_id ? `onclick="selectMapById(${s.map_id})"` : ''}>
-                                    <div class="source-header">
-                                        <span class="source-rate">${s.drop_rate || '未知'}</span>
-                                    </div>
                                     <div class="source-map">📍 ${s.map_name || '未知地图'}</div>
                                     ${s.notes ? `<div style="font-size: 12px; color: #718096; margin-top: 6px;">${s.notes}</div>` : ''}
                                 </div>
@@ -1061,10 +1004,9 @@
             
             container.innerHTML = monsters.map(m => `
                 <div class="list-item ${selectedMonster === m.id ? 'active' : ''}" onclick="selectMonster(${m.id})">
-                    <div class="item-number" style="background: #fed7d7; color: #c53030;">${m.id}</div>
                     <div style="flex: 1;">
                         <div class="item-name">${m.name}</div>
-                        <div class="item-meta">兵力:${m.force} | 武力:${m.attack}</div>
+                        <div class="item-meta">${m.general_trait ? m.general_trait + ' | ' : ''}兵力:${m.force} | 武力:${m.attack}</div>
                     </div>
                 </div>
             `).join('');
@@ -1092,6 +1034,12 @@
                 <div style="padding: 16px;">
                     <div class="info-card">
                         <h4>⚔️ ${monster.name}</h4>
+                        ${monster.general_trait ? `
+                        <div class="info-row">
+                            <span class="info-label">大将特性</span>
+                            <span class="info-value">${monster.general_trait}</span>
+                        </div>
+                        ` : ''}
                         <div class="info-row">
                             <span class="info-label">兵力</span>
                             <span class="info-value">${monster.force}</span>
@@ -1174,7 +1122,6 @@
             
             container.innerHTML = maps.map(m => `
                 <div class="list-item ${selectedMap === m.id ? 'active' : ''}" onclick="selectMapById(${m.id})">
-                    <div class="item-number" style="background: #c6f6d5; color: #22543d;">${m.id}</div>
                     <div class="item-name">${m.name}</div>
                 </div>
             `).join('');
@@ -1188,7 +1135,7 @@
         }
 
         // 选择地图
-        function selectMapById(id) {
+        async function selectMapById(id) {
             selectedMap = id;
             renderMaps(allMaps.filter(m => 
                 m.name.toLowerCase().includes((document.getElementById('mapSearch')?.value || '').toLowerCase())
@@ -1196,6 +1143,46 @@
             
             const map = allMaps.find(m => m.id === id);
             if (!map) return;
+            
+            // 获取地图掉落物品
+            let droppedItemsHtml = '';
+            try {
+                // 先获取所有物品信息
+                const itemsRes = await fetch(`${API_BASE}/items`);
+                const itemsData = await itemsRes.json();
+                const allItemsMap = {};
+                itemsData.data.forEach(item => {
+                    allItemsMap[item.id] = item;
+                });
+                
+                const res = await fetch(`${API_BASE}/item-sources`);
+                const data = await res.json();
+                const mapItems = data.data
+                    .filter(source => source.map_id === map.id)
+                    .map(source => {
+                        const item = allItemsMap[source.item_id];
+                        return {
+                            name: source.item_name,
+                            quality: item ? item.quality : null
+                        };
+                    });
+                
+                if (mapItems.length > 0) {
+                    droppedItemsHtml = `
+                        <div style="margin-top: 16px;">
+                            <h4 style="margin: 0 12px 12px; color: #2d3748; font-size: 14px;">🎁 掉落物品：</h4>
+                            <div style="padding: 12px; background: #f7fafc; border-radius: 8px;">
+                                ${mapItems.map(item => {
+                                    const qualityStyle = item.quality ? getQualityColor(item.quality) : '';
+                                    return `<div style="padding: 4px 0; ${qualityStyle}">${item.name}</div>`;
+                                }).join('')}
+                            </div>
+                        </div>
+                    `;
+                }
+            } catch (err) {
+                console.error('加载掉落物品失败:', err);
+            }
             
             // 渲染地图详情
             const detailHtml = `
@@ -1210,6 +1197,7 @@
                             <div class="route-box">${formatRoute(map.route_description)}</div>
                         </div>
                     ` : '<div class="empty-state" style="padding: 40px;"><p>暂无走法说明</p></div>'}
+                    ${droppedItemsHtml}
                 </div>
             `;
             
@@ -1218,18 +1206,7 @@
             document.getElementById('monsterRoute').innerHTML = detailHtml;
         }
 
-        // 加载NPC
-        async function loadNpcs() {
-            try {
-                const res = await fetch(`${API_BASE}/npcs`);
-                const data = await res.json();
-                allNpcs = data.data;
-                renderNpcs(allNpcs);
-                document.getElementById('npc-count').textContent = `共计：${data.count}`;
-            } catch (err) {
-                console.error('加载NPC失败:', err);
-            }
-        }
+
 
         // 渲染NPC列表
         function renderNpcs(npcs) {

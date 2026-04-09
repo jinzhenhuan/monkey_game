@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>小猴子游戏 - 后台管理系统</title>
+    <title>吞食天地梦幻版 - 后台管理系统</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -551,7 +551,7 @@
             /* 主内容区 */
             .main-content {
                 margin-left: 0;
-                padding: 24px 16px 16px;
+                padding: 60px 16px 16px;
             }
 
             /* 顶部栏 */
@@ -559,6 +559,7 @@
                 flex-direction: column;
                 align-items: flex-start;
                 gap: 12px;
+                margin-bottom: 16px;
             }
 
             .page-title {
@@ -595,6 +596,7 @@
             .stats-grid {
                 grid-template-columns: 1fr;
                 gap: 12px;
+                margin-bottom: 20px;
             }
 
             .stat-card {
@@ -672,7 +674,7 @@
         <!-- 侧边栏 -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h1>🐒 小猴子游戏</h1>
+                <h1>🐒 吞食天地梦幻版</h1>
                 <p>后台管理系统</p>
             </div>
             <nav class="nav-menu">
@@ -700,10 +702,6 @@
                     <span class="nav-icon">📍</span>
                     <span>武将刷新</span>
                 </div>
-                <div class="nav-item" data-page="npcs" onclick="showPage('npcs')">
-                    <span class="nav-icon">🧙</span>
-                    <span>NPC管理</span>
-                </div>
                 <div class="nav-item" data-page="guides" onclick="showPage('guides')">
                     <span class="nav-icon">📚</span>
                     <span>攻略管理</span>
@@ -717,7 +715,25 @@
             <div id="page-dashboard" class="page-content">
                 <div class="top-bar">
                     <h1 class="page-title">📊 数据概览</h1>
-                    <a href="/" target="_blank" class="btn btn-secondary">🌐 查看前台网站</a>
+                    <div class="top-actions">
+                        <a href="/" target="_blank" class="btn btn-secondary">🌐 查看前台网站</a>
+                        <div class="dropdown">
+                            <button class="btn btn-primary">📤 全站数据</button>
+                            <div class="dropdown-menu" style="position: absolute; right: 16px; top: 60px; background: white; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); padding: 8px; z-index: 1000; display: none;">
+                                <a href="/api/export/items" class="dropdown-item" style="display: block; padding: 10px 16px; color: #2d3748; text-decoration: none; border-radius: 4px; transition: background 0.2s;">📥导出物品</a>
+                                <a href="/api/export/maps" class="dropdown-item" style="display: block; padding: 10px 16px; color: #2d3748; text-decoration: none; border-radius: 4px; transition: background 0.2s;">📥导出地图</a>
+                                <a href="/api/export/monsters" class="dropdown-item" style="display: block; padding: 10px 16px; color: #2d3748; text-decoration: none; border-radius: 4px; transition: background 0.2s;">📥导出武将</a>
+                                <div style="border-top: 1px solid #e2e8f0; margin: 8px 0;"></div>
+                                <div class="dropdown-item" style="display: block; padding: 10px 16px; color: #2d3748; text-decoration: none; border-radius: 4px; transition: background 0.2s; cursor: pointer;" onclick="openImportModal('items')">📥导入物品</div>
+                                <div class="dropdown-item" style="display: block; padding: 10px 16px; color: #2d3748; text-decoration: none; border-radius: 4px; transition: background 0.2s; cursor: pointer;" onclick="openImportModal('maps')">📥导入地图</div>
+                                <div class="dropdown-item" style="display: block; padding: 10px 16px; color: #2d3748; text-decoration: none; border-radius: 4px; transition: background 0.2s; cursor: pointer;" onclick="openImportModal('monsters')">📥导入武将</div>
+                                <div style="border-top: 1px solid #e2e8f0; margin: 8px 0;"></div>
+                                <a href="/api/backup" class="dropdown-item" style="display: block; padding: 10px 16px; color: #2d3748; text-decoration: none; border-radius: 4px; transition: background 0.2s;">📦 备份全站数据</a>
+                                <div class="dropdown-item" style="display: block; padding: 10px 16px; color: #2d3748; text-decoration: none; border-radius: 4px; transition: background 0.2s; cursor: pointer;" onclick="openRestoreModal()">📥 恢复全站数据</div>
+                                <div class="dropdown-item" style="display: block; padding: 10px 16px; color: #e53e3e; text-decoration: none; border-radius: 4px; transition: background 0.2s; cursor: pointer;" onclick="clearAllData()">🗑️ 清空所有数据</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 
                 <div class="stats-grid">
@@ -740,13 +756,6 @@
                         <div class="stat-info">
                             <h3 id="stat-maps">0</h3>
                             <p>地图总数</p>
-                        </div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon purple">🧙</div>
-                        <div class="stat-info">
-                            <h3 id="stat-npcs">0</h3>
-                            <p>NPC总数</p>
                         </div>
                     </div>
                 </div>
@@ -788,9 +797,9 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>物品名称</th>
                                 <th>类型</th>
+                                <th>品质</th>
                                 <th>等级要求</th>
                                 <th>描述</th>
                                 <th>操作</th>
@@ -821,12 +830,13 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>武将名称</th>
+                                <th>大将特性</th>
                                 <th>兵力</th>
                                 <th>武力</th>
                                 <th>智力</th>
                                 <th>速度</th>
+                                <th>描述</th>
                                 <th>操作</th>
                             </tr>
                         </thead>
@@ -855,10 +865,10 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>地图名称</th>
                                 <th>描述</th>
                                 <th>走法说明</th>
+                                <th>掉落物品</th>
                                 <th>操作</th>
                             </tr>
                         </thead>
@@ -884,10 +894,8 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>物品</th>
                                 <th>地图</th>
-                                <th>爆率</th>
                                 <th>备注</th>
                                 <th>操作</th>
                             </tr>
@@ -914,7 +922,6 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>武将</th>
                                 <th>地图</th>
                                 <th>刷新坐标</th>
@@ -948,7 +955,6 @@
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>ID</th>
                                 <th>标题</th>
                                 <th>内容</th>
                                 <th>操作</th>
@@ -962,37 +968,7 @@
             </div>
 
             <!-- NPC管理页 -->
-            <div id="page-npcs" class="page-content hidden">
-                <div class="top-bar">
-                    <h1 class="page-title">🧙 NPC管理</h1>
-                </div>
-                
-                <div class="action-bar">
-                    <div class="search-box">
-                        <span>🔍</span>
-                        <input type="text" id="npc-search" placeholder="搜索NPC名称..." oninput="loadNpcs()">
-                    </div>
-                    <button class="btn btn-primary" onclick="openModal('npc')">➕ 添加NPC</button>
-                </div>
 
-                <div class="data-table-container">
-                    <table class="data-table">
-                        <thead>
-                            <tr>
-                                <th>ID</th>
-                                <th>NPC名称</th>
-                                <th>所在地图</th>
-                                <th>坐标</th>
-                                <th>功能</th>
-                                <th>操作</th>
-                            </tr>
-                        </thead>
-                        <tbody id="npcs-table-body">
-                            <!-- 动态生成 -->
-                        </tbody>
-                    </table>
-                </div>
-            </div>
         </main>
     </div>
 
@@ -1025,8 +1001,9 @@
         
         // 当前页面和编辑状态
         let currentPage = 'dashboard';
-        let editingId = null;
         let editingType = null;
+        let editingId = null;
+        let editingSelectedMapIds = [];
 
         // 缓存数据（用于下拉选择）
         let cache = {
@@ -1079,16 +1056,98 @@
             }
         }
 
+        // 更新物品选项
+        function updateItemOptions() {
+            const typeSelect = document.getElementById('form-item-type');
+            const container = document.getElementById('item-checkbox-container');
+            const selectedType = typeSelect.value;
+            
+            // 清空现有内容
+            container.innerHTML = '';
+            
+            if (!selectedType) {
+                container.innerHTML = '<p style="color: #a0aec0; text-align: center;">请先选择物品类型</p>';
+                return;
+            }
+            
+            // 过滤物品
+            const filteredItems = cache.items.filter(item => item.type === selectedType);
+            
+            if (filteredItems.length === 0) {
+                container.innerHTML = '<p style="color: #a0aec0; text-align: center;">该类型下暂无物品</p>';
+                return;
+            }
+            
+            // 获取已选择的掉落物品
+            let selectedItems = [];
+            const droppedItemsInput = document.getElementById('form-dropped-items');
+            if (droppedItemsInput) {
+                try {
+                    selectedItems = JSON.parse(droppedItemsInput.value);
+                } catch (e) {
+                    selectedItems = [];
+                }
+            }
+            
+            // 生成复选框
+            filteredItems.forEach(item => {
+                const checkbox = document.createElement('div');
+                checkbox.style.display = 'flex';
+                checkbox.style.alignItems = 'center';
+                checkbox.style.marginBottom = '8px';
+                // 使用宽松相等或者将ID转换为数字进行比较
+                const checked = selectedItems.some(id => id == item.id) ? 'checked' : '';
+                checkbox.innerHTML = `
+                    <input type="checkbox" id="item-${item.id}" value="${item.id}" ${checked} style="margin-right: 8px;">
+                    <label for="item-${item.id}">${item.name}</label>
+                `;
+                container.appendChild(checkbox);
+            });
+        }
+
         // 初始化
         document.addEventListener('DOMContentLoaded', function() {
             loadStats();
             loadItems();
             loadMonsters();
             loadMaps();
-            loadNpcs();
             loadSources();
             loadSpawns();
             loadGuides();
+            
+            // 初始化下拉菜单
+            const dropdownBtn = document.querySelector('.dropdown button');
+            const dropdownMenu = document.querySelector('.dropdown-menu');
+            
+            if (dropdownBtn && dropdownMenu) {
+                dropdownBtn.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dropdownMenu.style.display = dropdownMenu.style.display === 'block' ? 'none' : 'block';
+                });
+                
+                // 点击其他地方关闭下拉菜单
+                document.addEventListener('click', function(e) {
+                    if (!dropdownBtn.contains(e.target) && !dropdownMenu.contains(e.target)) {
+                        dropdownMenu.style.display = 'none';
+                    }
+                });
+            }
+            
+            // 点击遮罩关闭导入模态框
+            const importModal = document.getElementById('import-modal');
+            if (importModal) {
+                importModal.addEventListener('click', function(e) {
+                    if (e.target === this) closeImportModal();
+                });
+            }
+            
+            // 点击遮罩关闭恢复模态框
+            const restoreModal = document.getElementById('restore-modal');
+            if (restoreModal) {
+                restoreModal.addEventListener('click', function(e) {
+                    if (e.target === this) closeRestoreModal();
+                });
+            }
         });
 
         // 切换页面
@@ -1114,7 +1173,6 @@
             if (page === 'maps') loadMaps();
             if (page === 'sources') loadSources();
             if (page === 'spawns') loadSpawns();
-            if (page === 'npcs') loadNpcs();
             if (page === 'guides') loadGuides();
         }
 
@@ -1126,7 +1184,6 @@
                 document.getElementById('stat-items').textContent = data.items;
                 document.getElementById('stat-monsters').textContent = data.monsters;
                 document.getElementById('stat-maps').textContent = data.maps;
-                document.getElementById('stat-npcs').textContent = data.npcs;
             } catch (err) {
                 console.error('加载统计失败:', err);
             }
@@ -1143,9 +1200,9 @@
                 const tbody = document.getElementById('items-table-body');
                 tbody.innerHTML = data.data.map(item => `
                     <tr>
-                        <td>${item.id}</td>
                         <td><strong>${item.name}</strong></td>
                         <td><span class="tag tag-blue">${item.type || '未分类'}</span></td>
+                        <td><span class="tag tag-green">${item.quality || '-'}</span></td>
                         <td>${item.level_requirement || 0}</td>
                         <td>${item.description || '-'}</td>
                         <td>
@@ -1170,12 +1227,13 @@
                 const tbody = document.getElementById('monsters-table-body');
                 tbody.innerHTML = data.data.map(m => `
                     <tr>
-                        <td>${m.id}</td>
                         <td><strong>${m.name}</strong></td>
+                        <td>${m.general_trait || '-'}</td>
                         <td>${m.force || 0}</td>
                         <td>${m.attack || 0}</td>
                         <td>${m.intelligence || 0}</td>
                         <td>${m.speed || 0}</td>
+                        <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${m.description || '-'}</td>
                         <td>
                             <button class="btn btn-sm btn-secondary" onclick="editMonster(${m.id})">编辑</button>
                             <button class="btn btn-sm btn-danger" onclick="deleteMonster(${m.id})">删除</button>
@@ -1193,52 +1251,48 @@
             try {
                 const res = await fetch(`${API_BASE}/maps?search=${search}`);
                 const data = await res.json();
-                cache.maps = data.data;
+                
+                // 获取每个地图的掉落物品
+                const mapsWithItems = await Promise.all(data.data.map(async (map) => {
+                    const sourcesRes = await fetch(`${API_BASE}/item-sources`);
+                    const sourcesData = await sourcesRes.json();
+                    const mapItems = sourcesData.data
+                        .filter(source => source.map_id === map.id);
+                    const droppedItems = mapItems.map(source => source.item_id);
+                    const droppedItemNames = mapItems.map(source => source.item_name);
+                    return { ...map, droppedItems, droppedItemNames };
+                }));
+                
+                cache.maps = mapsWithItems;
                 
                 const tbody = document.getElementById('maps-table-body');
-                tbody.innerHTML = data.data.map(m => `
-                    <tr>
-                        <td>${m.id}</td>
-                        <td><strong>${m.name}</strong></td>
-                        <td>${m.description || '-'}</td>
-                        <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis;">${m.route_description || '-'}</td>
-                        <td>
-                            <button class="btn btn-sm btn-secondary" onclick="editMap(${m.id})">编辑</button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteMap(${m.id})">删除</button>
-                        </td>
-                    </tr>
-                `).join('');
+                tbody.innerHTML = mapsWithItems.map(m => {
+                    const items = m.droppedItemNames || [];
+                    const displayItems = items.slice(0, 2).join(', ');
+                    const tooltipItems = items.join(', ');
+                    return `
+                        <tr>
+                            <td><strong>${m.name}</strong></td>
+                            <td>${m.description || '-'}</td>
+                            <td style="max-width: 300px; overflow: hidden; text-overflow: ellipsis;">${m.route_description || '-'}</td>
+                            <td>
+                                <span ${items.length > 2 ? `title="${tooltipItems}"` : ''} style="cursor: ${items.length > 2 ? 'pointer' : 'default'}">
+                                    ${items.length > 0 ? displayItems + (items.length > 2 ? '...' : '') : '-'}
+                                </span>
+                            </td>
+                            <td>
+                                <button class="btn btn-sm btn-secondary" onclick="editMap(${m.id})">编辑</button>
+                                <button class="btn btn-sm btn-danger" onclick="deleteMap(${m.id})">删除</button>
+                            </td>
+                        </tr>
+                    `;
+                }).join('');
             } catch (err) {
                 console.error('加载地图失败:', err);
             }
         }
 
-        // 加载NPC列表
-        async function loadNpcs() {
-            const search = document.getElementById('npc-search')?.value || '';
-            try {
-                const res = await fetch(`${API_BASE}/npcs?search=${search}`);
-                const data = await res.json();
-                cache.npcs = data.data;
-                
-                const tbody = document.getElementById('npcs-table-body');
-                tbody.innerHTML = data.data.map(n => `
-                    <tr>
-                        <td>${n.id}</td>
-                        <td><strong>${n.name}</strong></td>
-                        <td>${n.map_name || '-'}</td>
-                        <td>${n.position || '-'}</td>
-                        <td>${n.function || '-'}</td>
-                        <td>
-                            <button class="btn btn-sm btn-secondary" onclick="editNpc(${n.id})">编辑</button>
-                            <button class="btn btn-sm btn-danger" onclick="deleteNpc(${n.id})">删除</button>
-                        </td>
-                    </tr>
-                `).join('');
-            } catch (err) {
-                console.error('加载NPC失败:', err);
-            }
-        }
+
 
         // 加载物品出处
         async function loadSources() {
@@ -1246,16 +1300,31 @@
                 const res = await fetch(`${API_BASE}/item-sources`);
                 const data = await res.json();
                 
+                // 按物品分组
+                const groupedData = data.data.reduce((groups, source) => {
+                    const itemId = source.item_id;
+                    if (!groups[itemId]) {
+                        groups[itemId] = {
+                            id: source.id,
+                            item_id: source.item_id,
+                            item_name: source.item_name,
+                            maps: [],
+                            notes: source.notes
+                        };
+                    }
+                    groups[itemId].maps.push(source.map_name);
+                    return groups;
+                }, {});
+                
                 const tbody = document.getElementById('sources-table-body');
-                tbody.innerHTML = data.data.map(s => `
+                tbody.innerHTML = Object.values(groupedData).map(item => `
                     <tr>
-                        <td>${s.id}</td>
-                        <td><strong>${s.item_name}</strong></td>
-                        <td>${s.map_name || '-'}</td>
-                        <td><span class="tag tag-green">${s.drop_rate || '未知'}</span></td>
-                        <td>${s.notes || '-'}</td>
+                        <td><strong>${item.item_name}</strong></td>
+                        <td>${item.maps.join(', ')}</td>
+                        <td>${item.notes || '-'}</td>
                         <td>
-                            <button class="btn btn-sm btn-danger" onclick="deleteSource(${s.id})">删除</button>
+                            <button class="btn btn-sm btn-secondary" onclick="editSource(${item.item_id})">编辑</button>
+                            <button class="btn btn-sm btn-danger" onclick="deleteSource(${item.item_id})">删除</button>
                         </td>
                     </tr>
                 `).join('');
@@ -1269,17 +1338,18 @@
             try {
                 const res = await fetch(`${API_BASE}/monster-spawns`);
                 const data = await res.json();
+                cache.spawns = data.data;
                 
                 const tbody = document.getElementById('spawns-table-body');
                 tbody.innerHTML = data.data.map(s => `
                     <tr>
-                        <td>${s.id}</td>
                         <td><strong>${s.monster_name}</strong></td>
                         <td>${s.map_name}</td>
                         <td><code>${s.spawn_point || '-'}</code></td>
                         <td>${s.refresh_time ? s.refresh_time + '分钟' : '-'}</td>
                         <td>${s.notes || '-'}</td>
                         <td>
+                            <button class="btn btn-sm btn-secondary" onclick="editSpawn(${s.id})">编辑</button>
                             <button class="btn btn-sm btn-danger" onclick="deleteSpawn(${s.id})">删除</button>
                         </td>
                     </tr>
@@ -1299,7 +1369,6 @@
                 const tbody = document.getElementById('guides-table-body');
                 tbody.innerHTML = data.data.map(g => `
                     <tr>
-                        <td>${g.id}</td>
                         <td><strong>${g.title}</strong></td>
                         <td>${g.content.substring(0, 50)}${g.content.length > 50 ? '...' : ''}</td>
                         <td>
@@ -1314,9 +1383,10 @@
         }
 
         // 打开模态框
-        function openModal(type, id = null) {
+        function openModal(type, id = null, selectedMapIds = []) {
             editingType = type;
             editingId = id;
+            editingSelectedMapIds = selectedMapIds;
             const modal = document.getElementById('modal');
             const title = document.getElementById('modal-title');
             const body = document.getElementById('modal-body');
@@ -1326,7 +1396,7 @@
                 monster: id ? '编辑武将' : '添加武将',
                 map: id ? '编辑地图' : '添加地图',
                 npc: id ? '编辑NPC' : '添加NPC',
-                source: '添加物品出处',
+                source: id ? '编辑物品出处' : '添加物品出处',
                 spawn: '添加武将刷新点',
                 guide: id ? '编辑攻略' : '添加攻略'
             };
@@ -1346,6 +1416,27 @@
                         if (item && item.category) {
                             const categorySelect = document.getElementById('form-category');
                             categorySelect.value = item.category;
+                        }
+                    }
+                }, 100);
+            }
+            
+            // 初始化地图编辑的物品类型和掉落物品
+            if (type === 'map' && id) {
+                setTimeout(() => {
+                    const map = cache.maps.find(m => m.id === id);
+                    if (map && map.droppedItems && map.droppedItems.length > 0) {
+                        // 获取第一个掉落物品的类型
+                        const firstItemId = map.droppedItems[0];
+                        const firstItem = cache.items.find(i => i.id === firstItemId);
+                        if (firstItem && firstItem.type) {
+                            // 设置物品类型下拉框
+                            const typeSelect = document.getElementById('form-item-type');
+                            if (typeSelect) {
+                                typeSelect.value = firstItem.type;
+                                // 触发onchange事件来加载物品选项
+                                updateItemOptions();
+                            }
                         }
                     }
                 }, 100);
@@ -1416,6 +1507,10 @@
                         <label class="form-label">武将名称 *</label>
                         <input type="text" class="form-input" id="form-name" value="${m.name || ''}" placeholder="如：关羽">
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">大将特性</label>
+                        <input type="text" class="form-input" id="form-general-trait" value="${m.general_trait || ''}" placeholder="如：万人敌、智将">
+                    </div>
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">兵力</label>
@@ -1461,79 +1556,94 @@
                         <textarea class="form-textarea" id="form-route" placeholder="如：从祖玛四层(45,78)→上→上→左→右→下→祖玛五层">${m.route_description || ''}</textarea>
                         <p class="form-hint">支持方向键：上、下、左、右，或坐标如 (125,80)</p>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">物品类型</label>
+                        <select class="form-select" id="form-item-type" onchange="updateItemOptions()">
+                            <option value="">请选择物品类型</option>
+                            <option value="装备">装备</option>
+                            <option value="宝物">宝物</option>
+                            <option value="谋略">谋略</option>
+                            <option value="道具">道具</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">掉落物品（多选）</label>
+                        <div id="item-checkbox-container" style="max-height: 300px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px;">
+                            <p style="color: #a0aec0; text-align: center;">请先选择物品类型</p>
+                        </div>
+                    </div>
+                    <input type="hidden" id="form-dropped-items" value="${m.droppedItems ? JSON.stringify(m.droppedItems) : '[]'}">
                 `;
             }
             
-            if (type === 'npc') {
-                const n = id ? cache.npcs.find(i => i.id === id) : {};
-                const mapOptions = cache.maps.map(m => 
-                    `<option value="${m.id}" ${n.map_id === m.id ? 'selected' : ''}>${m.name}</option>`
-                ).join('');
-                
-                return `
-                    <div class="form-group">
-                        <label class="form-label">NPC名称 *</label>
-                        <input type="text" class="form-input" id="form-name" value="${n.name || ''}" placeholder="如：武器店老板">
-                    </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">所在地图</label>
-                            <select class="form-select" id="form-map">
-                                <option value="">请选择地图</option>
-                                ${mapOptions}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">坐标</label>
-                            <input type="text" class="form-input" id="form-position" value="${n.position || ''}" placeholder="如：125,80">
-                        </div>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">功能描述</label>
-                        <input type="text" class="form-input" id="form-function" value="${n.function || ''}" placeholder="如：出售武器、修理装备">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">对话内容</label>
-                        <textarea class="form-textarea" id="form-dialogue" placeholder="NPC的默认对话...">${n.dialogue || ''}</textarea>
-                    </div>
-                `;
-            }
+
             
             if (type === 'source') {
                 const itemOptions = cache.items.map(i => `<option value="${i.id}">${i.name}</option>`).join('');
                 const mapOptions = cache.maps.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+                
+                // 获取当前物品出处的信息（如果是编辑模式）
+                let source = {};
+                let selectedMaps = editingSelectedMapIds || [];
+                if (id) {
+                    // 找到对应的物品
+                    source = { item_id: id, notes: '' };
+                }
                 
                 return `
                     <div class="form-group">
                         <label class="form-label">物品 *</label>
                         <select class="form-select" id="form-item">
                             <option value="">请选择物品</option>
-                            ${itemOptions}
+                            ${itemOptions.split('</option>').map(option => {
+                                if (option.includes('<option')) {
+                                    const value = option.match(/value="(.*?)"/)[1];
+                                    const text = option.match(/>(.*?)$/)[1];
+                                    const selected = source.item_id == value ? 'selected' : '';
+                                    return `<option value="${value}" ${selected}>${text}</option>`;
+                                }
+                                return option;
+                            }).join('')}
                         </select>
                     </div>
-                    <div class="form-row">
-                        <div class="form-group">
-                            <label class="form-label">地图（可选）</label>
-                            <select class="form-select" id="form-map">
-                                <option value="">请选择地图</option>
-                                ${mapOptions}
-                            </select>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">爆率</label>
-                            <input type="text" class="form-input" id="form-rate" placeholder="如：1/50, 必掉">
+                    <div class="form-group">
+                        <label class="form-label">地图（多选）</label>
+                        <div id="map-checkbox-container" style="max-height: 300px; overflow-y: auto; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px;">
+                            ${mapOptions.split('</option>').map(option => {
+                                if (option.includes('<option')) {
+                                    const value = option.match(/value="(.*?)"/)[1];
+                                    const text = option.match(/>(.*?)$/)[1];
+                                    const checked = selectedMaps.includes(Number(value)) ? 'checked' : '';
+                                    return `
+                                        <div style="display: flex; align-items: center; margin-bottom: 8px;">
+                                            <input type="checkbox" id="map-${value}" value="${value}" ${checked} style="margin-right: 8px;">
+                                            <label for="map-${value}">${text}</label>
+                                        </div>
+                                    `;
+                                }
+                                return '';
+                            }).join('')}
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">备注</label>
-                        <input type="text" class="form-input" id="form-notes" placeholder="额外说明...">
+                        <input type="text" class="form-input" id="form-notes" value="${source.notes || ''}" placeholder="额外说明...">
                     </div>
                 `;
             }
             
             if (type === 'spawn') {
-                const monsterOptions = cache.monsters.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
-                const mapOptions = cache.maps.map(m => `<option value="${m.id}">${m.name}</option>`).join('');
+                let spawn = {};
+                if (id) {
+                    // 查找对应的刷新点数据
+                    const spawnData = cache.spawns?.find(s => s.id === id);
+                    if (spawnData) {
+                        spawn = spawnData;
+                    }
+                }
+                
+                const monsterOptions = cache.monsters.map(m => `<option value="${m.id}" ${spawn.monster_id == m.id ? 'selected' : ''}>${m.name}</option>`).join('');
+                const mapOptions = cache.maps.map(m => `<option value="${m.id}" ${spawn.map_id == m.id ? 'selected' : ''}>${m.name}</option>`).join('');
                 
                 return `
                     <div class="form-row">
@@ -1555,16 +1665,16 @@
                     <div class="form-row">
                         <div class="form-group">
                             <label class="form-label">刷新坐标</label>
-                            <input type="text" class="form-input" id="form-point" placeholder="如：125,80 或 随机">
+                            <input type="text" class="form-input" id="form-point" value="${spawn.spawn_point || ''}" placeholder="如：125,80 或 随机">
                         </div>
                         <div class="form-group">
                             <label class="form-label">刷新时间（分钟）</label>
-                            <input type="number" class="form-input" id="form-time" placeholder="如：30">
+                            <input type="number" class="form-input" id="form-time" value="${spawn.refresh_time || ''}" placeholder="如：30">
                         </div>
                     </div>
                     <div class="form-group">
                         <label class="form-label">备注</label>
-                        <input type="text" class="form-input" id="form-notes" placeholder="如：BOSS点、精英怪...">
+                        <input type="text" class="form-input" id="form-notes" value="${spawn.notes || ''}" placeholder="如：BOSS点、精英怪...">
                     </div>
                 `;
             }
@@ -1616,6 +1726,7 @@
             } else if (type === 'monster') {
                 data = {
                     name: document.getElementById('form-name').value,
+                    general_trait: document.getElementById('form-general-trait').value,
                     force: document.getElementById('form-force').value,
                     attack: document.getElementById('form-attack').value,
                     intelligence: document.getElementById('form-intelligence').value,
@@ -1623,31 +1734,36 @@
                     description: document.getElementById('form-description').value
                 };
             } else if (type === 'map') {
+                // 收集选中的物品
+                const selectedItems = [];
+                document.querySelectorAll('#item-checkbox-container input[type="checkbox"]:checked').forEach(checkbox => {
+                    selectedItems.push(parseInt(checkbox.value));
+                });
+                
                 data = {
                     name: document.getElementById('form-name').value,
                     description: document.getElementById('form-description').value,
-                    route_description: document.getElementById('form-route').value
-                };
-            } else if (type === 'npc') {
-                data = {
-                    name: document.getElementById('form-name').value,
-                    map_id: document.getElementById('form-map').value,
-                    position: document.getElementById('form-position').value,
-                    function: document.getElementById('form-function').value,
-                    dialogue: document.getElementById('form-dialogue').value
+                    route_description: document.getElementById('form-route').value,
+                    dropped_items: selectedItems
                 };
             } else if (type === 'source') {
+                // 收集选中的地图
+                const selectedMaps = [];
+                document.querySelectorAll('#map-checkbox-container input[type="checkbox"]:checked').forEach(checkbox => {
+                    selectedMaps.push(parseInt(checkbox.value));
+                });
+                
                 url = `${API_BASE}/item-sources`;
                 method = 'POST';
                 data = {
                     item_id: document.getElementById('form-item').value,
-                    map_id: document.getElementById('form-map').value,
-                    drop_rate: document.getElementById('form-rate').value,
+                    map_ids: selectedMaps,
                     notes: document.getElementById('form-notes').value
                 };
             } else if (type === 'spawn') {
                 url = `${API_BASE}/monster-spawns`;
-                method = 'POST';
+                method = id ? 'PUT' : 'POST';
+                if (id) url = `${API_BASE}/monster-spawns/${id}`;
                 data = {
                     monster_id: document.getElementById('form-monster').value,
                     map_id: document.getElementById('form-map').value,
@@ -1739,13 +1855,7 @@
             showToast('删除成功', 'success');
         }
 
-        async function deleteNpc(id) {
-            if (!confirm('确定删除这个NPC吗？')) return;
-            await fetch(`${API_BASE}/npcs/${id}`, { method: 'DELETE' });
-            loadNpcs();
-            loadStats();
-            showToast('删除成功', 'success');
-        }
+
 
         async function deleteSource(id) {
             if (!confirm('确定删除这个出处关联吗？')) return;
@@ -1772,8 +1882,35 @@
         function editItem(id) { openModal('item', id); }
         function editMonster(id) { openModal('monster', id); }
         function editMap(id) { openModal('map', id); }
-        function editNpc(id) { openModal('npc', id); }
         function editGuide(id) { openModal('guide', id); }
+        function editSpawn(id) { openModal('spawn', id); }
+        
+        // 编辑物品出处
+        async function editSource(itemId) {
+            try {
+                // 根据物品ID获取该物品对应的所有地图
+                const res = await fetch(`${API_BASE}/item-sources`);
+                const data = await res.json();
+                
+                // 过滤出该物品的所有出处
+                const itemSources = data.data.filter(source => source.item_id == itemId);
+                
+                if (itemSources.length === 0) {
+                    showToast('未找到物品出处信息', 'error');
+                    return;
+                }
+                
+                // 获取物品信息和已选择的地图ID
+                const item = itemSources[0];
+                const selectedMapIds = itemSources.map(source => source.map_id);
+                
+                // 打开模态框，并传递选中的地图ID
+                openModal('source', itemId, selectedMapIds);
+            } catch (err) {
+                console.error('编辑物品出处失败:', err);
+                showToast('编辑物品出处失败', 'error');
+            }
+        }
 
         // Toast 提示
         function showToast(message, type = 'success') {
@@ -1793,6 +1930,186 @@
         document.getElementById('modal').addEventListener('click', function(e) {
             if (e.target === this) closeModal();
         });
+
+        // 导入模态框
+        let importType = '';
+        
+        function openImportModal(type) {
+            importType = type;
+            document.getElementById('import-modal-title').textContent = `导入${type === 'items' ? '物品' : type === 'maps' ? '地图' : '武将'}`;
+            document.getElementById('import-modal').classList.add('active');
+            document.getElementById('import-modal').style.display = 'flex';
+        }
+        
+        function closeImportModal() {
+            document.getElementById('import-modal').classList.remove('active');
+            document.getElementById('import-modal').style.display = 'none';
+            document.getElementById('import-form').reset();
+        }
+        
+        async function submitImportForm() {
+            const fileInput = document.getElementById('import-file');
+            if (!fileInput.files.length) {
+                showToast('请选择文件', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                const res = await fetch(`/api/import/${importType}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(data.message, 'success');
+                    closeImportModal();
+                    // 刷新对应的数据列表
+                    if (importType === 'items') loadItems();
+                    if (importType === 'maps') loadMaps();
+                    if (importType === 'monsters') loadMonsters();
+                } else {
+                    showToast(data.error, 'error');
+                }
+            } catch (err) {
+                showToast('导入失败', 'error');
+            }
+        }
+
+        // 恢复数据模态框
+        function openRestoreModal() {
+            document.getElementById('restore-modal').classList.add('active');
+            document.getElementById('restore-modal').style.display = 'flex';
+        }
+        
+        function closeRestoreModal() {
+            document.getElementById('restore-modal').classList.remove('active');
+            document.getElementById('restore-modal').style.display = 'none';
+            document.getElementById('restore-form').reset();
+        }
+        
+        async function submitRestoreForm() {
+            const fileInput = document.getElementById('restore-file');
+            if (!fileInput.files.length) {
+                showToast('请选择文件', 'error');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', fileInput.files[0]);
+            
+            try {
+                const res = await fetch('/api/restore', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await res.json();
+                if (res.ok) {
+                    showToast(data.message, 'success');
+                    closeRestoreModal();
+                    // 刷新所有数据列表
+                    loadStats();
+                    loadItems();
+                    loadMonsters();
+                    loadMaps();
+                    loadSources();
+                    loadSpawns();
+                    loadGuides();
+                } else {
+                    showToast(data.error, 'error');
+                }
+            } catch (err) {
+                showToast('恢复失败', 'error');
+            }
+        }
+        
+        // 清空所有数据（三级确认）
+        function clearAllData() {
+            let confirmCount = 0;
+            
+            if (confirm('⚠️ 警告：此操作将清空所有数据，且无法恢复！\n\n请确认是否继续？')) {
+                confirmCount++;
+                if (confirm('⚠️ 二次确认：确定要清空所有数据吗？\n\n此操作不可撤销！')) {
+                    confirmCount++;
+                    if (confirm('⚠️ 最终确认：确定要执行清空操作吗？\n\n所有数据将被永久删除！')) {
+                        // 执行清空操作
+                        fetch('/api/clear-all', {
+                            method: 'DELETE'
+                        })
+                        .then(res => {
+                            return res.json().then(data => {
+                                if (res.ok) {
+                                    showToast(data.message, 'success');
+                                    // 刷新所有数据列表
+                                    loadStats();
+                                    loadItems();
+                                    loadMonsters();
+                                    loadMaps();
+                                    loadSources();
+                                    loadSpawns();
+                                    loadGuides();
+                                } else {
+                                    showToast(data.error, 'error');
+                                }
+                            });
+                        })
+                        .catch(err => {
+                            showToast('清空失败', 'error');
+                        });
+                    }
+                }
+            }
+        }
     </script>
+
+    <!-- 导入模态框 -->
+    <div id="import-modal" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3 id="import-modal-title">导入数据</h3>
+                <button class="modal-close" onclick="closeImportModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="import-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label class="form-label">选择Excel文件</label>
+                        <input type="file" class="form-input" id="import-file" name="file" accept=".xlsx, .xls" required>
+                        <p class="form-hint">请使用与导出数据相同的Excel格式</p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeImportModal()">取消</button>
+                <button class="btn btn-primary" onclick="submitImportForm()">导入</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 恢复数据模态框 -->
+    <div id="restore-modal" class="modal-overlay" style="display: none;">
+        <div class="modal">
+            <div class="modal-header">
+                <h3>恢复全站数据</h3>
+                <button class="modal-close" onclick="closeRestoreModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="restore-form" enctype="multipart/form-data">
+                    <div class="form-group">
+                        <label class="form-label">选择备份文件</label>
+                        <input type="file" class="form-input" id="restore-file" name="file" accept=".json" required>
+                        <p class="form-hint">请选择从本站导出的备份文件</p>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeRestoreModal()">取消</button>
+                <button class="btn btn-primary" onclick="submitRestoreForm()">恢复</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
