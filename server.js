@@ -879,33 +879,65 @@ app.get('/api/export/maps', async (req, res) => {
     try {
         const db = getDB();
         
-        const sql = `SELECT name, description, route_description FROM maps ORDER BY id`;
+        const sql = `SELECT id, name, description, route_description FROM maps ORDER BY id`;
         
-        db.all(sql, [], (err, rows) => {
+        db.all(sql, [], (err, maps) => {
             if (err) return res.status(500).json({ error: err.message });
             
-            // 转换数据为中文表头格式
-            const chineseRows = rows.map(row => ({
-                '地图名称': row.name,
-                '描述': row.description,
-                '走法说明': row.route_description
-            }));
+            let processedMaps = 0;
+            const chineseRows = [];
             
-            // 创建工作表，使用中文表头
-            const ws = XLSX.utils.json_to_sheet(chineseRows);
-            const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, '地图');
-            
-            // 生成Excel文件
-            const fileName = `地图_${Date.now()}.xlsx`;
-            const filePath = path.join(os.tmpdir(), fileName);
-            XLSX.writeFile(wb, filePath);
-            
-            // 发送文件
-            res.download(filePath, fileName, (err) => {
-                if (err) return res.status(500).json({ error: err.message });
-                // 删除临时文件
-                fs.unlinkSync(filePath);
+            maps.forEach(map => {
+                // 查询掉落物品
+                db.all(`
+                    SELECT i.name 
+                    FROM item_sources s 
+                    LEFT JOIN items i ON s.item_id = i.id 
+                    WHERE s.map_id = ?
+                `, [map.id], (err, items) => {
+                    if (err) return res.status(500).json({ error: err.message });
+                    
+                    // 查询出现的武将
+                    db.all(`
+                        SELECT m.name 
+                        FROM monster_spawns s 
+                        LEFT JOIN monsters m ON s.monster_id = m.id 
+                        WHERE s.map_id = ?
+                    `, [map.id], (err, monsters) => {
+                        if (err) return res.status(500).json({ error: err.message });
+                        
+                        // 转换数据为中文表头格式
+                        const chineseRow = {
+                            '地图名称': map.name,
+                            '描述': map.description,
+                            '地图说明': map.route_description,
+                            '掉落物品': items.map(item => item.name).join('、'),
+                            '地图武将': monsters.map(monster => monster.name).join('、')
+                        };
+                        
+                        chineseRows.push(chineseRow);
+                        processedMaps++;
+                        
+                        if (processedMaps === maps.length) {
+                            // 创建工作表，使用中文表头
+                            const ws = XLSX.utils.json_to_sheet(chineseRows);
+                            const wb = XLSX.utils.book_new();
+                            XLSX.utils.book_append_sheet(wb, ws, '地图');
+                            
+                            // 生成Excel文件
+                            const fileName = `地图_${Date.now()}.xlsx`;
+                            const filePath = path.join(os.tmpdir(), fileName);
+                            XLSX.writeFile(wb, filePath);
+                            
+                            // 发送文件
+                            res.download(filePath, fileName, (err) => {
+                                if (err) return res.status(500).json({ error: err.message });
+                                // 删除临时文件
+                                fs.unlinkSync(filePath);
+                            });
+                        }
+                    });
+                });
             });
         });
     } catch (err) {
@@ -1078,32 +1110,98 @@ app.post('/api/import/maps', upload.single('file'), async (req, res) => {
         }
         
         // 清空旧数据
-        db.run('DELETE FROM maps', (err) => {
+        db.run('BEGIN TRANSACTION');
+        
+        // 先清空地图相关的所有数据
+        db.run('DELETE FROM item_sources', (err) => {
             if (err) {
+                db.run('ROLLBACK');
                 fs.unlinkSync(req.file.path);
                 return res.status(500).json({ error: err.message });
             }
             
-            // 批量插入新数据
-            let completed = 0;
-            
-            db.run('BEGIN TRANSACTION');
-            
-            rows.forEach(row => {
-                const sql = `INSERT INTO maps (name, description, route_description) VALUES (?, ?, ?)`;
-                db.run(sql, [row['地图名称'], row['描述'], row['走法说明']], function(err) {
+            db.run('DELETE FROM monster_spawns', (err) => {
+                if (err) {
+                    db.run('ROLLBACK');
+                    fs.unlinkSync(req.file.path);
+                    return res.status(500).json({ error: err.message });
+                }
+                
+                db.run('DELETE FROM maps', (err) => {
                     if (err) {
                         db.run('ROLLBACK');
                         fs.unlinkSync(req.file.path);
                         return res.status(500).json({ error: err.message });
                     }
                     
-                    completed++;
-                    if (completed === rows.length) {
-                        db.run('COMMIT');
-                        fs.unlinkSync(req.file.path);
-                        res.json({ message: '导入成功', count: rows.length });
-                    }
+                    // 批量插入新数据
+                    let completed = 0;
+                    
+                    rows.forEach(row => {
+                        const sql = `INSERT INTO maps (name, description, route_description) VALUES (?, ?, ?)`;
+                        db.run(sql, [row['地图名称'], row['描述'], row['地图说明'] || row['走法说明']], function(err) {
+                            if (err) {
+                                db.run('ROLLBACK');
+                                fs.unlinkSync(req.file.path);
+                                return res.status(500).json({ error: err.message });
+                            }
+                            
+                            const mapId = this.lastID;
+                            
+                            // 处理掉落物品
+                            if (row['掉落物品']) {
+                                const itemNames = row['掉落物品'].split('、').filter(name => name.trim());
+                                itemNames.forEach(itemName => {
+                                    db.get('SELECT id FROM items WHERE name = ?', [itemName.trim()], (err, item) => {
+                                        if (err) {
+                                            db.run('ROLLBACK');
+                                            fs.unlinkSync(req.file.path);
+                                            return res.status(500).json({ error: err.message });
+                                        }
+                                        if (item) {
+                                            db.run('INSERT INTO item_sources (item_id, map_id) VALUES (?, ?)', [item.id, mapId], (err) => {
+                                                if (err) {
+                                                    db.run('ROLLBACK');
+                                                    fs.unlinkSync(req.file.path);
+                                                    return res.status(500).json({ error: err.message });
+                                                }
+                                            });
+                                        }
+                                    });
+                                });
+                            }
+                            
+                            // 处理地图武将
+                            if (row['地图武将']) {
+                                const monsterNames = row['地图武将'].split('、').filter(name => name.trim());
+                                monsterNames.forEach(monsterName => {
+                                    db.get('SELECT id FROM monsters WHERE name = ?', [monsterName.trim()], (err, monster) => {
+                                        if (err) {
+                                            db.run('ROLLBACK');
+                                            fs.unlinkSync(req.file.path);
+                                            return res.status(500).json({ error: err.message });
+                                        }
+                                        if (monster) {
+                                            db.run('INSERT INTO monster_spawns (monster_id, map_id) VALUES (?, ?)', [monster.id, mapId], (err) => {
+                                                if (err) {
+                                                    db.run('ROLLBACK');
+                                                    fs.unlinkSync(req.file.path);
+                                                    return res.status(500).json({ error: err.message });
+                                                }
+                                            });
+                                        }
+                                    });
+                                });
+                            }
+                            
+                            completed++;
+                            if (completed === rows.length) {
+                                db.run('COMMIT');
+                                fs.unlinkSync(req.file.path);
+                                res.json({ message: '导入成功', count: rows.length });
+                            }
+                        });
+                    });
                 });
             });
         });
