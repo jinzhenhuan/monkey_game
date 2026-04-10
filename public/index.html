@@ -970,6 +970,8 @@
         let allItems = [];
         let allMonsters = [];
         let allMaps = [];
+        let allItemSources = [];
+        let allMonsterSpawns = [];
         
         let selectedItem = null;
         let selectedMonster = null;
@@ -985,8 +987,32 @@
             await Promise.all([
                 loadItems(),
                 loadMonsters(),
-                loadMaps()
+                loadMaps(),
+                loadItemSources(),
+                loadMonsterSpawns()
             ]);
+        }
+        
+        // 加载物品出处
+        async function loadItemSources() {
+            try {
+                const res = await fetch(`${API_BASE}/item-sources`);
+                const data = await res.json();
+                allItemSources = data.data;
+            } catch (err) {
+                console.error('加载物品出处失败:', err);
+            }
+        }
+        
+        // 加载武将刷新点
+        async function loadMonsterSpawns() {
+            try {
+                const res = await fetch(`${API_BASE}/monster-spawns`);
+                const data = await res.json();
+                allMonsterSpawns = data.data;
+            } catch (err) {
+                console.error('加载武将刷新点失败:', err);
+            }
         }
 
         // 加载物品
@@ -1343,7 +1369,7 @@
         }
 
         // 选择地图
-        async function selectMapById(id) {
+        function selectMapById(id) {
             selectedMap = id;
             renderMaps(allMaps.filter(m => 
                 m.name.toLowerCase().includes((document.getElementById('mapSearch')?.value || '').toLowerCase())
@@ -1352,44 +1378,31 @@
             const map = allMaps.find(m => m.id === id);
             if (!map) return;
             
-            // 获取地图掉落物品和地图武将
-            let droppedItems = [];
-            let droppedMonsters = [];
-            try {
-                // 先获取所有物品信息
-                const itemsRes = await fetch(`${API_BASE}/items`);
-                const itemsData = await itemsRes.json();
-                const allItemsMap = {};
-                itemsData.data.forEach(item => {
-                    allItemsMap[item.id] = item;
+            // 使用缓存的数据获取地图掉落物品和地图武将
+            const allItemsMap = {};
+            allItems.forEach(item => {
+                allItemsMap[item.id] = item;
+            });
+            
+            // 获取掉落物品
+            const droppedItems = allItemSources
+                .filter(source => source.map_id === map.id)
+                .map(source => {
+                    const item = allItemsMap[source.item_id];
+                    return {
+                        name: source.item_name,
+                        quality: item ? item.quality : null
+                    };
                 });
-                
-                // 获取掉落物品
-                const sourcesRes = await fetch(`${API_BASE}/item-sources`);
-                const sourcesData = await sourcesRes.json();
-                droppedItems = sourcesData.data
-                    .filter(source => source.map_id === map.id)
-                    .map(source => {
-                        const item = allItemsMap[source.item_id];
-                        return {
-                            name: source.item_name,
-                            quality: item ? item.quality : null
-                        };
-                    });
-                
-                // 获取地图武将
-                const spawnsRes = await fetch(`${API_BASE}/monster-spawns`);
-                const spawnsData = await spawnsRes.json();
-                droppedMonsters = spawnsData.data
-                    .filter(spawn => spawn.map_id === map.id)
-                    .map(spawn => {
-                        return {
-                            name: spawn.monster_name
-                        };
-                    });
-            } catch (err) {
-                console.error('加载掉落物品和地图武将失败:', err);
-            }
+            
+            // 获取地图武将
+            const droppedMonsters = allMonsterSpawns
+                .filter(spawn => spawn.map_id === map.id)
+                .map(spawn => {
+                    return {
+                        name: spawn.monster_name
+                    };
+                });
             
             // 渲染地图详情
             const detailHtml = `
