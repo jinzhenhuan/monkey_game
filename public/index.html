@@ -511,6 +511,11 @@
             background-color: rgba(0,0,0,0.5);
             z-index: 1000;
         }
+        
+        /* 地图详情弹出层层级更高 */
+        #mapModal {
+            z-index: 1100;
+        }
 
         .modal.active {
             display: flex;
@@ -718,7 +723,7 @@
                 </div>
 
                 <!-- 物品出处 -->
-                <div class="panel">
+                <div class="panel mobile-hidden">
                     <div class="panel-header">
                         <div class="panel-title">
                             <div class="panel-icon">📍</div>
@@ -780,7 +785,7 @@
                     </div>
                 </div>
 
-                <div class="panel">
+                <div class="panel mobile-hidden">
                     <div class="panel-header">
                         <div class="panel-title">
                             <div class="panel-icon">📊</div>
@@ -795,7 +800,7 @@
                     </div>
                 </div>
 
-                <div class="panel">
+                <div class="panel mobile-hidden">
                     <div class="panel-header">
                         <div class="panel-title">
                             <div class="panel-icon">🗺️</div>
@@ -851,7 +856,7 @@
                     </div>
                 </div>
 
-                <div class="panel">
+                <div class="panel mobile-hidden">
                     <div class="panel-header">
                         <div class="panel-title">
                             <div class="panel-icon">📍</div>
@@ -914,6 +919,45 @@
             </div>
             <div class="modal-body" id="mapModalBody">
                 <!-- 地图详情内容 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 武将信息弹出层 -->
+    <div id="monsterModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>武将信息</h3>
+                <button onclick="closeMonsterModal()">×</button>
+            </div>
+            <div class="modal-body" id="monsterModalBody">
+                <!-- 武将信息内容 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 物品信息弹出层 -->
+    <div id="itemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>物品信息</h3>
+                <button onclick="closeItemModal()">×</button>
+            </div>
+            <div class="modal-body" id="itemModalBody">
+                <!-- 物品信息内容 -->
+            </div>
+        </div>
+    </div>
+
+    <!-- 武将出现关卡弹出层 -->
+    <div id="monsterSpawnsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>出现关卡</h3>
+                <button onclick="closeMonsterSpawnsModal()">×</button>
+            </div>
+            <div class="modal-body" id="monsterSpawnsModalBody">
+                <!-- 出现关卡内容 -->
             </div>
         </div>
     </div>
@@ -1040,39 +1084,55 @@
                 const res = await fetch(`${API_BASE}/items/${id}`);
                 const detail = await res.json();
                 
-                // 渲染物品出处
-                const sourceContainer = document.getElementById('itemSource');
-                if (detail.sources && detail.sources.length > 0) {
-                    document.getElementById('source-count').textContent = `共计：${detail.sources.length}`;
-                    sourceContainer.innerHTML = `
-                        <div style="padding: 12px;">
-                            <div class="info-card" style="margin-bottom: 12px;">
-                                <h4>📦 ${detail.name}</h4>
-                                <p>${detail.description || '暂无描述'}</p>
-                                ${detail.level_requirement > 0 ? `<p style="margin-top: 8px;">等级要求: ${detail.level_requirement}</p>` : ''}
+                // 渲染物品信息和出处
+                const itemHtml = `
+                    <div style="padding: 12px;">
+                        <div class="info-card" style="margin-bottom: 12px;">
+                            <h4>📦 ${detail.name}</h4>
+                            <p>${detail.description || '暂无描述'}</p>
+                            ${detail.level_requirement > 0 ? `<p style="margin-top: 8px;">等级要求: ${detail.level_requirement}</p>` : ''}
+                        </div>
+                        <h4 style="margin: 16px 12px 12px; color: #2d3748; font-size: 14px;">物品出处：</h4>
+                        ${detail.sources && detail.sources.length > 0 ? detail.sources.map(s => `
+                            <div class="source-item" ${s.map_id ? `onclick="selectMapById(${s.map_id})"` : ''}>
+                                <div class="source-map">📍 ${s.map_name || '未知地图'}</div>
+                                ${s.notes ? `<div style="font-size: 12px; color: #718096; margin-top: 6px;">${s.notes}</div>` : ''}
                             </div>
-                            <h4 style="margin: 16px 12px 12px; color: #2d3748; font-size: 14px;">物品出处：</h4>
-                            ${detail.sources.map(s => `
-                                <div class="source-item" ${s.map_id ? `onclick="selectMapById(${s.map_id})"` : ''}>
-                                    <div class="source-map">📍 ${s.map_name || '未知地图'}</div>
-                                    ${s.notes ? `<div style="font-size: 12px; color: #718096; margin-top: 6px;">${s.notes}</div>` : ''}
-                                </div>
-                            `).join('')}
-                        </div>
-                    `;
+                        `).join('') : `
+                            <div class="empty-state">
+                                <div class="empty-icon">📭</div>
+                                <p>暂无出处数据</p>
+                                <p style="font-size: 12px; margin-top: 8px;">请在后台添加物品出处</p>
+                            </div>
+                        `}
+                    </div>
+                `;
+                
+                // 检查是否为移动端
+                const isMobile = window.innerWidth <= 768;
+                
+                if (isMobile) {
+                    // 在移动端使用弹出层
+                    document.getElementById('itemModalBody').innerHTML = itemHtml;
+                    document.getElementById('itemModal').classList.add('active');
                 } else {
-                    document.getElementById('source-count').textContent = '共计：0';
-                    sourceContainer.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-icon">📭</div>
-                            <p>暂无出处数据</p>
-                            <p style="font-size: 12px; margin-top: 8px;">请在后台添加物品出处</p>
-                        </div>
-                    `;
+                    // 在PC端正常显示
+                    const sourceContainer = document.getElementById('itemSource');
+                    if (detail.sources && detail.sources.length > 0) {
+                        document.getElementById('source-count').textContent = `共计：${detail.sources.length}`;
+                    } else {
+                        document.getElementById('source-count').textContent = '共计：0';
+                    }
+                    sourceContainer.innerHTML = itemHtml;
                 }
             } catch (err) {
                 console.error('加载物品详情失败:', err);
             }
+        }
+        
+        // 关闭物品信息弹出层
+        function closeItemModal() {
+            document.getElementById('itemModal').classList.remove('active');
         }
 
         // 加载武将
@@ -1142,7 +1202,7 @@
             if (!monster) return;
             
             // 渲染武将信息
-            document.getElementById('monsterInfo').innerHTML = `
+            const monsterHtml = `
                 <div style="padding: 16px;">
                     <div class="info-card">
                         <h4>⚔️ ${monster.name}</h4>
@@ -1173,42 +1233,78 @@
                 </div>
             `;
             
+            // 检查是否为移动端
+            const isMobile = window.innerWidth <= 768;
+            
+            if (isMobile) {
+                // 在移动端使用弹出层
+                document.getElementById('monsterModalBody').innerHTML = monsterHtml;
+                document.getElementById('monsterModal').classList.add('active');
+            } else {
+                // 在PC端正常显示
+                document.getElementById('monsterInfo').innerHTML = monsterHtml;
+            }
+            
             try {
                 // 获取武将刷新点
                 const res = await fetch(`${API_BASE}/monsters/${id}`);
                 const detail = await res.json();
                 
+                const spawnHtml = detail.spawns && detail.spawns.length > 0 ? detail.spawns.map(s => `
+                    <div class="source-item" onclick="selectMapById(${s.map_id})">
+                        <div class="source-header">
+                            <span class="source-monster">🗺️ ${s.map_name}</span>
+                            ${s.spawn_point ? `<span class="source-rate">${s.spawn_point}</span>` : ''}
+                        </div>
+                        ${s.refresh_time ? `<div style="font-size: 12px; color: #718096;">刷新: ${s.refresh_time}分钟</div>` : ''}
+                        ${s.notes ? `<div style="font-size: 12px; color: #718096; margin-top: 4px;">${s.notes}</div>` : ''}
+                    </div>
+                `).join('') : `
+                    <div class="empty-state">
+                        <div class="empty-icon">📭</div>
+                        <p>暂无刷新点数据</p>
+                    </div>
+                `;
+                
                 const spawnContainer = document.getElementById('monsterSpawns');
-                if (detail.spawns && detail.spawns.length > 0) {
-                    spawnContainer.innerHTML = detail.spawns.map(s => `
-                        <div class="source-item" onclick="selectMapById(${s.map_id})">
-                            <div class="source-header">
-                                <span class="source-monster">🗺️ ${s.map_name}</span>
-                                ${s.spawn_point ? `<span class="source-rate">${s.spawn_point}</span>` : ''}
-                            </div>
-                            ${s.refresh_time ? `<div style="font-size: 12px; color: #718096;">刷新: ${s.refresh_time}分钟</div>` : ''}
-                            ${s.notes ? `<div style="font-size: 12px; color: #718096; margin-top: 4px;">${s.notes}</div>` : ''}
-                        </div>
-                    `).join('');
-                    
-                    // 如果有自动选择的地图，显示详情
-                    if (autoSelectMapId) {
-                        selectMapById(autoSelectMapId);
-                    } else {
-                        // 默认选择第一个地图
-                        selectMapById(detail.spawns[0].map_id);
+                spawnContainer.innerHTML = spawnHtml;
+                
+                // 在移动端，当关闭武将信息弹出层时，显示出现关卡弹出层
+                if (isMobile) {
+                    // 为关闭按钮添加事件监听器
+                    const closeBtn = document.querySelector('#monsterModal .modal-header button');
+                    if (closeBtn) {
+                        // 先移除可能存在的旧监听器
+                        closeBtn.removeEventListener('click', showSpawnsModal);
+                        // 添加新的监听器
+                        function showSpawnsModal() {
+                            document.getElementById('monsterSpawnsModalBody').innerHTML = spawnHtml;
+                            document.getElementById('monsterSpawnsModal').classList.add('active');
+                        }
+                        closeBtn.addEventListener('click', showSpawnsModal);
                     }
-                } else {
-                    spawnContainer.innerHTML = `
-                        <div class="empty-state">
-                            <div class="empty-icon">📭</div>
-                            <p>暂无刷新点数据</p>
-                        </div>
-                    `;
+                    
+                    // 同时修改closeMonsterModal函数，确保在关闭时也显示出现关卡弹出层
+                    const originalCloseMonsterModal = closeMonsterModal;
+                    closeMonsterModal = function() {
+                        originalCloseMonsterModal();
+                        document.getElementById('monsterSpawnsModalBody').innerHTML = spawnHtml;
+                        document.getElementById('monsterSpawnsModal').classList.add('active');
+                    };
                 }
             } catch (err) {
                 console.error('加载武将详情失败:', err);
             }
+        }
+        
+        // 关闭武将信息弹出层
+        function closeMonsterModal() {
+            document.getElementById('monsterModal').classList.remove('active');
+        }
+        
+        // 关闭武将出现关卡弹出层
+        function closeMonsterSpawnsModal() {
+            document.getElementById('monsterSpawnsModal').classList.remove('active');
         }
 
         // 加载地图
