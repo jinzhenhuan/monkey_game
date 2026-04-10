@@ -1080,7 +1080,7 @@
         }
 
         // 选择物品
-        async function selectItem(id) {
+        function selectItem(id) {
             selectedItem = id;
             filterItems(); // 重新渲染以更新active状态
             
@@ -1105,54 +1105,54 @@
             const item = allItems.find(i => i.id === id);
             if (!item) return;
             
-            try {
-                // 获取物品详情（包含出处）
-                const res = await fetch(`${API_BASE}/items/${id}`);
-                const detail = await res.json();
+            // 使用缓存的数据获取物品出处
+            const itemSources = allItemSources.filter(source => source.item_id === item.id);
+            
+            // 构建物品出处HTML
+            const sourcesHtml = itemSources.length > 0 ? itemSources.map(s => {
+                // 查找地图名称
+                const map = allMaps.find(m => m.id === s.map_id);
+                const mapName = map ? map.name : '未知地图';
                 
-                // 渲染物品信息和出处
-                const itemHtml = `
-                    <div style="padding: 12px;">
-                        <div class="info-card" style="margin-bottom: 12px;">
-                            <h4>📦 ${detail.name}</h4>
-                            <p>${detail.description || '暂无描述'}</p>
-                            ${detail.level_requirement > 0 ? `<p style="margin-top: 8px;">等级要求: ${detail.level_requirement}</p>` : ''}
-                        </div>
-                        <h4 style="margin: 16px 12px 12px; color: #2d3748; font-size: 14px;">物品出处：</h4>
-                        ${detail.sources && detail.sources.length > 0 ? detail.sources.map(s => `
-                            <div class="source-item" ${s.map_id ? `onclick="selectMapById(${s.map_id})"` : ''}>
-                                <div class="source-map">📍 ${s.map_name || '未知地图'}</div>
-                                ${s.notes ? `<div style="font-size: 12px; color: #718096; margin-top: 6px;">${s.notes}</div>` : ''}
-                            </div>
-                        `).join('') : `
-                            <div class="empty-state">
-                                <div class="empty-icon">📭</div>
-                                <p>暂无出处数据</p>
-                                <p style="font-size: 12px; margin-top: 8px;">请在后台添加物品出处</p>
-                            </div>
-                        `}
+                return `
+                    <div class="source-item" ${s.map_id ? `onclick="selectMapById(${s.map_id})"` : ''}>
+                        <div class="source-map">📍 ${mapName}</div>
+                        ${s.notes ? `<div style="font-size: 12px; color: #718096; margin-top: 6px;">${s.notes}</div>` : ''}
                     </div>
                 `;
-                
-                // 检查是否为移动端
-                const isMobile = window.innerWidth <= 768;
-                
-                if (isMobile) {
-                    // 在移动端使用弹出层
-                    document.getElementById('itemModalBody').innerHTML = itemHtml;
-                    document.getElementById('itemModal').classList.add('active');
-                } else {
-                    // 在PC端正常显示
-                    const sourceContainer = document.getElementById('itemSource');
-                    if (detail.sources && detail.sources.length > 0) {
-                        document.getElementById('source-count').textContent = `共计：${detail.sources.length}`;
-                    } else {
-                        document.getElementById('source-count').textContent = '共计：0';
-                    }
-                    sourceContainer.innerHTML = itemHtml;
-                }
-            } catch (err) {
-                console.error('加载物品详情失败:', err);
+            }).join('') : `
+                <div class="empty-state">
+                    <div class="empty-icon">📭</div>
+                    <p>暂无出处数据</p>
+                    <p style="font-size: 12px; margin-top: 8px;">请在后台添加物品出处</p>
+                </div>
+            `;
+            
+            // 渲染物品信息和出处
+            const itemHtml = `
+                <div style="padding: 12px;">
+                    <div class="info-card" style="margin-bottom: 12px;">
+                        <h4>📦 ${item.name}</h4>
+                        <p>${item.description || '暂无描述'}</p>
+                        ${item.level_requirement > 0 ? `<p style="margin-top: 8px;">等级要求: ${item.level_requirement}</p>` : ''}
+                    </div>
+                    <h4 style="margin: 16px 12px 12px; color: #2d3748; font-size: 14px;">物品出处：</h4>
+                    ${sourcesHtml}
+                </div>
+            `;
+            
+            // 检查是否为移动端
+            const isMobile = window.innerWidth <= 768;
+            
+            if (isMobile) {
+                // 在移动端使用弹出层
+                document.getElementById('itemModalBody').innerHTML = itemHtml;
+                document.getElementById('itemModal').classList.add('active');
+            } else {
+                // 在PC端正常显示
+                const sourceContainer = document.getElementById('itemSource');
+                document.getElementById('source-count').textContent = `共计：${itemSources.length}`;
+                sourceContainer.innerHTML = itemHtml;
             }
         }
         
